@@ -1,0 +1,72 @@
+/* Paleta de Cursolandia: oscuro del header + amarillo de acento */
+:root {
+    --cl-dark: #212529;
+    --cl-accent: #ffc107;
+    --cl-soft: #fff6dd;
+}
+
+.bg-soft { background-color: var(--cl-soft); }
+
+/* Carrusel: degradados oscuros que combinan con el header */
+.slide-curso {
+    min-height: 380px;
+    color: #fff;
+}
+.slide-1 { background: linear-gradient(135deg, #212529 0%, #2b3a67 100%); }
+.slide-2 { background: linear-gradient(135deg, #212529 0%, #0f4c4a 100%); }
+.slide-3 { background: linear-gradient(135deg, #212529 0%, #5a2a6b 100%); }
+.slide-icono { font-size: 9rem; color: var(--cl-accent); }
+.carousel-indicators [data-bs-target] { background-color: var(--cl-accent); }
+
+/* Margen para que los textos del carrusel no tapen las flechas */
+.carousel-caption-custom { padding: 3rem 4rem; }
+
+/* Círculo amarillo con ícono (qué ofrece, cómo funciona, confianza) */
+.icon-circle {
+    width: 4rem;
+    height: 4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--cl-accent);
+    color: var(--cl-dark);
+    font-size: 1.75rem;
+}
+
+/* Ícono de las tarjetas de cursos */
+.curso-icono {
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .5rem;
+    font-size: 1.5rem;
+    background-color: var(--cl-dark);
+    color: var(--cl-accent);
+}
+
+/* Tarjetas con borde de acento */
+.card-cl { border: 0; border-top: 4px solid var(--cl-accent); }
+.card-cl-left { border: 0; border-left: 4px solid var(--cl-accent); }
+
+/* Cómo funciona: la tarjeta se levanta, se agranda y se marca con borde amarillo */
+#como-funciona .step-card {
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+#como-funciona .step-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 0 0 3px var(--cl-accent), 0 1.25rem 2.5rem rgba(0, 0, 0, .35) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    #como-funciona .step-card { transition: none; }
+    #como-funciona .step-card:hover { transform: none; }
+}
+
+/* Imagen dentro de una slide del carrusel */
+.slide-imagen {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+}
