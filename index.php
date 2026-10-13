@@ -40,7 +40,7 @@ $cursos = $conexion->query($sql);
 </head>
 <body>
 
-<header class="py-3 text-bg-dark">
+<header class="py-3 text-bg-dark sticky-top">
   <div class="container-fluid px-3">
     <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
       <a href="index.php" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
@@ -59,7 +59,7 @@ $cursos = $conexion->query($sql);
       </form>
       <div class="text-end">
         <button type="button" class="btn btn-outline-light me-2">Iniciar sesión</button>
-        <button type="button" class="btn btn-warning">Registrarse</button>
+        <a href="Registro.php" class="btn btn-warning">Registrarse</a>
       </div>
     </div>
   </div>
@@ -304,7 +304,7 @@ $cursos = $conexion->query($sql);
       <div class="col-6 col-md-4">
         <h3 class="h6">Contacto</h3>
         <ul class="list-unstyled text-secondary">
-          <li class="mb-2"><i class="bi bi-envelope me-2"></i>contacto@ejemplo.com</li>
+          <li class="mb-2"><i class="bi bi-envelope me-2"></i>Jeremias01@gmail.com</li>
           <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>San Luis, Argentina</li>
         </ul>
       </div>
