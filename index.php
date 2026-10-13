@@ -2,27 +2,32 @@
 session_start();
 include "Persistencia/Conexion.php";
 $conexion=conectar();
-$sql = "SELECT c.*, COUNT(i.ID_Usuario) AS inscriptos
-        FROM cursos c
-        LEFT JOIN inscripcion i ON i.ID_Curso = c.ID AND i.Estado = 'activa'
-        GROUP BY c.ID
-        ORDER BY inscriptos DESC, c.ID DESC
-        LIMIT 3";
+$sql = "SELECT cursos.*, COUNT(inscripcion.ID_Usuario) AS cantidad_inscriptos
+        FROM cursos
+        JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
+        LEFT JOIN inscripcion ON inscripcion.ID_Curso = cursos.ID
+                              AND inscripcion.Estado = 'activa'
+        WHERE creador.Plan = 'pro'
+        GROUP BY cursos.ID
+        ORDER BY cantidad_inscriptos DESC, cursos.ID DESC
+        LIMIT 3";//esta consulta solo devuelve a los cursos que son creados por un usuario de plan pro y muestra por prioridad al curso con mas inscriptos o por otro lado el curso que sea mas reciente
 $destacados = $conexion->query($sql);
-
-
-
-
-
+$sql="(SELECT cursos.*, creador.Plan AS plan_creador
+      FROM cursos
+      JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
+      WHERE creador.Plan = 'pro'
+      ORDER BY cursos.Fecha_Inicio ASC
+      LIMIT 3)
+      UNION ALL
+      (SELECT cursos.*, creador.Plan AS plan_creador
+      FROM cursos
+      JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
+      WHERE creador.Plan = 'gratuito'
+      ORDER BY cursos.Fecha_Inicio ASC
+      LIMIT 3)
+      ORDER BY plan_creador DESC, Fecha_Inicio ASC";
+$cursos = $conexion->query($sql);
 ?>
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -31,7 +36,7 @@ $destacados = $conexion->query($sql);
 <title>Cursolandia</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="Estilos/estilos.css?v=2" rel="stylesheet">>
+<link href="Estilos/estilos.css?v=2" rel="stylesheet">
 </head>
 <body>
 
@@ -71,14 +76,6 @@ $destacados = $conexion->query($sql);
         <button type="button" data-bs-target="#carruselCursos" data-bs-slide-to="<?= $k ?>" aria-label="Curso <?= $k ?>"></button>
         <?php endfor; ?>
 
-
-          
-        
-        
-        
-        
-        
-        ?>
       </div>
       <div class="carousel-inner">
 
@@ -102,18 +99,18 @@ $destacados = $conexion->query($sql);
           </div>
         </div>
         <?php  $n=0; while($c=$destacados->fetch_assoc()):$n++;?>    
-        <div class="carousel-item slide-curso slide-<?$n?>">
+        <div class="carousel-item slide-curso slide-<?=$n?>">
           <div class="container carousel-caption-custom">
             <div class="row align-items-center">
               <div class="col-md-8">
                 <span class="badge text-bg-warning mb-3">Destacados</span>
                 <h2 class="display-6 fw-bold"><?= htmlspecialchars($c["Titulo"])?></h2>
-                <p class="lead"><?= htmlspecialchars($c["Descripcion"])??""?></p>
+                <p class="lead"><?= htmlspecialchars($c["Descripcion"]??"")?></p>
                 <p class="mb-3">Del <?= htmlspecialchars($c["Fecha_Inicio"])?>  &nbsp;  Al &nbsp;   <?= htmlspecialchars($c["Fecha_Fin"])?></p>
                 <a href="#" class="btn btn-warning btn-lg">Inscribirme</a>
               </div>
               <div class="col-md-4 d-none d-md-block text-center">
-                <img src="<?=$c["Imagen"]?>" alt="Imagen" class="slide-imagen rounded shadow">
+                <img src="<?= htmlspecialchars($c["Imagen"]) ?>" alt="Imagen" class="slide-imagen rounded shadow">
               </div>
             </div>
           </div>
@@ -213,62 +210,35 @@ $destacados = $conexion->query($sql);
           <p class="text-secondary mb-0">Elegí uno e inscribite en un par de clics.</p>
         </div>
         <a href="#" class="btn btn-dark mt-3 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Crear un curso</a>
-      </div>
+      </div>        
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-code-slash"></i></span>
-          <h3 class="h5 card-title">Desarrollo web desde cero</h3>
-          <p class="card-text text-secondary">HTML, CSS y JavaScript para armar tu primer sitio completo.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>8 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
+        <?php while ($c = $cursos->fetch_assoc()): ?>
 
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-database"></i></span>
-          <h3 class="h5 card-title">Bases de datos con MySQL</h3>
-          <p class="card-text text-secondary">Tablas, relaciones y consultas para tus proyectos.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>6 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
+            <div class="col">
 
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-filetype-php"></i></span>
-          <h3 class="h5 card-title">Programación en PHP</h3>
-          <p class="card-text text-secondary">Formularios, sesiones y acceso a base de datos del lado del servidor.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>10 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
+                <div class="card h-100 shadow-sm">
 
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-phone"></i></span>
-          <h3 class="h5 card-title">Diseño responsive con Bootstrap</h3>
-          <p class="card-text text-secondary">Páginas que se adaptan a cualquier pantalla.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>4 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
+                  <!-- Parte de arriba: la imagen -->
+                  <img src="<?= htmlspecialchars($c["Imagen"])?>" class="card-img-top" alt="..." style="height: 180px; object-fit: cover;">
 
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-git"></i></span>
-          <h3 class="h5 card-title">Git y GitHub</h3>
-          <p class="card-text text-secondary">Guardá versiones de tu código y trabajá en equipo.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>2 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
-
-        <div class="col"><div class="card card-cl h-100 shadow-sm"><div class="card-body d-flex flex-column">
-          <span class="curso-icono mb-3"><i class="bi bi-braces"></i></span>
-          <h3 class="h5 card-title">JavaScript avanzado</h3>
-          <p class="card-text text-secondary">Funciones, DOM, eventos y consumo de APIs.</p>
-          <div class="mt-auto d-flex justify-content-between align-items-center">
-            <small class="text-secondary"><i class="bi bi-clock me-1"></i>8 semanas</small>
-            <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-          </div></div></div></div>
+                  <!-- Parte de abajo: los detalles -->
+                  <div class="card-body d-flex flex-column">
+                    <h3 class="h5 card-title"><?= htmlspecialchars($c["Titulo"])?></h3>
+                    <p class="card-text text-secondary"><?= htmlspecialchars($c["Descripcion"])?></p>
+                    <ul class="list-unstyled small text-secondary mb-3">
+                      <li><strong>Desde:</strong>&nbsp;<?= htmlspecialchars($c["Fecha_Inicio"])?></li>
+                      <li><strong>Hasta:</strong>&nbsp;<?= htmlspecialchars($c["Fecha_Fin"])?></li>
+                    </ul>
+                      <div class="mt-auto d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold"><?= htmlspecialchars($c["Costo"])?></span>
+                      <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
+                      </div>
+                  </div>
+              </div>
+            </div>
+        <?php endwhile; ?>
+        </div>
       </div>
     </div>
   </section>
