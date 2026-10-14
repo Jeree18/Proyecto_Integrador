@@ -1,5 +1,17 @@
 <?php
 session_start();
+include "Persistencia/Conexion.php";
+// CORREGIDO: saqué el $conexion=conectar(); de acá. Se conecta más abajo, solo cuando hace falta.
+$nombre="";
+$apellido="";
+$mail="";
+$clave="";
+$clave2="";
+$dni="";
+$nacimiento="";
+$telefono="";
+$intereses="";
+$antecedentes="";
 $mjenombre="";
 $mjeapellido="";
 $mjecorreo="";
@@ -9,16 +21,18 @@ $mjedni="";
 $mjefechanac="";
 $mjetelefono="";
 $mjefoto="";
-$mjeintereses="";
-$mjeantecedentes="";
+// CORREGIDO: eliminé $mjeintereses y $mjeantecedentes porque esos campos son opcionales.
 $error=false;
 if(isset($_POST['Registrar'])){
     extract($_POST);
-    $nombre   = trim($nombre);
-    $apellido = trim($apellido);
-    $mail     = trim($mail);
-    $dni      = trim($dni);
-    $telefono = trim($telefono);
+    $nombre       = trim($nombre);
+    $apellido     = trim($apellido);
+    $mail         = trim($mail);
+    $dni          = trim($dni);
+    $telefono     = trim($telefono);
+    // CORREGIDO: intereses y antecedentes son opcionales, solo se limpian los espacios.
+    $intereses    = trim($intereses);
+    $antecedentes = trim($antecedentes);
 
     if($nombre === "" || mb_strlen($nombre) < 2 || mb_strlen($nombre) > 50){
         $mjenombre = "El nombre debe tener entre 2 y 50 caracteres.";
@@ -56,47 +70,88 @@ if(isset($_POST['Registrar'])){
         $error = true;
     }
 
-    if(!ctype_digit($telefono) || strlen($telefono) < 8 || strlen($telefono) > 20){
+    // El teléfono es opcional: solo se valida si escribió algo
+    if($telefono !== "" && (!ctype_digit($telefono) || strlen($telefono) < 8 || strlen($telefono) > 20)){
         $mjetelefono = "El teléfono debe tener entre 8 y 20 números.";
         $error = true;
     }
 
-    if($_FILES['foto']['error'] === UPLOAD_ERR_NO_FILE){
-        $mjefoto = "Tenés que seleccionar una foto.";
-        $error = true;
-    } elseif($_FILES['foto']['error'] !== UPLOAD_ERR_OK){
-        $mjefoto = "No se pudo subir la foto. Probá con otra.";
-        $error = true;
-    } elseif($_FILES['foto']['size'] > 2 * 1024 * 1024){
-        $mjefoto = "La foto no puede pesar más de 2 MB.";
-        $error = true;
-    } elseif(!in_array(mime_content_type($_FILES['foto']['tmp_name']), ['image/jpeg', 'image/png', 'image/webp'])){
-        $mjefoto = "La foto debe ser JPG, PNG o WEBP.";
-        $error = true;
-    }
+    // La foto es opcional: los controles solo se hacen si eligió un archivo
+    $errorFoto = $_FILES['foto']['error'];
+    if($errorFoto !== UPLOAD_ERR_NO_FILE){
+        if($errorFoto !== UPLOAD_ERR_OK){
+            $mjefoto = "No se pudo subir la foto. Probá con otra.";
+            $error = true;
+        } elseif($_FILES['foto']['size'] > 2 * 1024 * 1024){
+            $mjefoto = "La foto no puede pesar más de 2 MB.";
+            $error = true;
+        } elseif(!in_array(mime_content_type($_FILES['foto']['tmp_name']), ['image/jpeg', 'image/png', 'image/webp'])){
+            $mjefoto = "La foto debe ser JPG, PNG o WEBP.";
+            $error = true;
+        }
+    } // CORREGIDO: faltaba esta llave que cierra el if de la foto.
 
-    if(!isset($intereses)){
-        $mjeintereses = "Seleccioná al menos un interés.";
-        $error = true;
-    }
+    // CORREGIDO: borré las validaciones de intereses y antecedentes (eran de un checkbox
+    // y un Si/No, pero en el formulario son textareas opcionales).
 
-    if(!isset($antecedentes) || ($antecedentes !== "Si" && $antecedentes !== "No")){
-        $mjeantecedentes = "Seleccioná una opción para antecedentes.";
-        $error = true;
-    }
-
+    // Si no hay errores, se consulta si el mail o el DNI ya existen
     if($error === false){
-        // Acá van: la consulta de mail y DNI repetidos y el INSERT.
-        // Si la consulta encuentra un repetido, cargá el mensaje y poné $error = true.
-        header("Location: login.php");
-        exit();
+        $conexion = conectar();
+        $mailSeguro = mysqli_real_escape_string($conexion, $mail);
+        $dniSeguro  = mysqli_real_escape_string($conexion, $dni);
+
+        $sql = "SELECT Dni, Mail
+                FROM Usuarios
+                WHERE Dni = '$dniSeguro' OR Mail = '$mailSeguro'";
+
+        $resultado = mysqli_query($conexion, $sql);
+        while($fila = mysqli_fetch_assoc($resultado)){
+            // CORREGIDO: se comparan en minúsculas porque MySQL no distingue mayúsculas en el mail
+            if(strtolower($fila['Mail']) === strtolower($mail)){
+                $mjecorreo = "Ese correo ya está registrado.";
+                $error = true;
+            }
+            if((string)$fila['Dni'] === $dni){
+                $mjedni = "Ese DNI ya está registrado.";
+                $error = true;
+            }
+        }
+
+        // CORREGIDO: el header solo se ejecuta si no hubo errores (antes redirigía siempre)
+        if($error === false){
+// Datos de texto limpios para el SQL ($mail y $dni ya se limpiaron arriba)
+            $nombreSeguro       = mysqli_real_escape_string($conexion, $nombre);
+            $apellidoSeguro     = mysqli_real_escape_string($conexion, $apellido);
+            $nacimientoSeguro   = mysqli_real_escape_string($conexion, $nacimiento);
+            $telefonoSeguro     = mysqli_real_escape_string($conexion, $telefono);
+            $interesesSeguro    = mysqli_real_escape_string($conexion, $intereses);
+            $antecedentesSeguro = mysqli_real_escape_string($conexion, $antecedentes);
+
+// La contraseña se guarda con hash. $clave2 no se guarda: solo sirvió para comparar
+            $claveHash = password_hash($clave, PASSWORD_DEFAULT);
+
+// Foto (opcional): si no subió ninguna, queda vacío
+            $nombreFoto = "";
+            if($_FILES['foto']['error'] === UPLOAD_ERR_OK){
+    // La extensión se toma del tipo real del archivo, no del nombre que trae
+                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                $tipo = mime_content_type($_FILES['foto']['tmp_name']);
+    // Nombre único para que dos fotos no se pisen
+                $nombreFoto = uniqid() . "." . $extensiones[$tipo];
+                move_uploaded_file($_FILES['foto']['tmp_name'], "imagenes/" . $nombreFoto);
+            }
+            $fotoSeguro = mysqli_real_escape_string($conexion, $nombreFoto);
+
+// INSERT: las columnas y los valores van en el mismo orden
+            $sql = "INSERT INTO usuarios(Nombre, Apellido, Mail, `Contraseña`, Dni, Nacimiento, Telefono, Foto, Intereses, Antecedentes, Rol, Plan)
+                    VALUES('$nombreSeguro', '$apellidoSeguro', '$mailSeguro', '$claveHash', '$dniSeguro', '$nacimientoSeguro','$telefonoSeguro', '$fotoSeguro', '$interesesSeguro', '$antecedentesSeguro', 'usuario', 'gratuito')";
+
+            mysqli_query($conexion, $sql);
+            //header("Location: login.php");
+            exit();
+        }
     }
-}
-
-
-
-
-
+} // CORREGIDO: faltaba esta llave que cierra el if(isset($_POST['Registrar']))
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -154,7 +209,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="nombre" class="form-label">Nombre *</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" maxlength="50"  value="<?php echo htmlspecialchars($nombre)?>"; required>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" maxlength="50"  value="<?php echo htmlspecialchars($nombre)?>" required>
                                     <?php 
                                         if(empty(!$mjenombre)){ echo "<br><font color='red'>$mjenombre</font>";}                                             
                                     ?>
@@ -162,7 +217,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="apellido" class="form-label">Apellido *</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido" maxlength="50" required>
+                                    <input type="text"  value="<?php echo htmlspecialchars($apellido)?>" class="form-control" id="apellido" name="apellido" maxlength="50" required>
                                     <?php 
                                         if(empty(!$mjeapellido)){ echo "<br><font color='red'>$mjeapellido</font>";}                                             
                                     ?>
@@ -170,7 +225,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12">
                                     <label for="mail" class="form-label">Correo electrónico *</label>
-                                    <input type="email" class="form-control" id="mail" name="mail" maxlength="100" required>
+                                    <input type="email"  value="<?php echo htmlspecialchars($mail)?>" class="form-control" id="mail" name="mail" maxlength="100" required>
                                     <?php 
                                         if(empty(!$mjecorreo)){ echo "<br><font color='red'>$mjecorreo</font>";}                                             
                                     ?>
@@ -178,7 +233,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="clave" class="form-label">Contraseña *</label>
-                                    <input type="password" class="form-control" id="clave" name="clave" required>
+                                    <input type="password"  value="<?php echo htmlspecialchars($clave)?>"class="form-control" id="clave" name="clave" required>
                                     <?php 
                                         if(empty(!$mjeclave)){ echo "<br><font color='red'>$mjeclave</font>";}                                             
                                     ?>
@@ -186,7 +241,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="clave2" class="form-label">Repetir contraseña *</label>
-                                    <input type="password" class="form-control" id="clave2" name="clave2" required>
+                                    <input type="password"  value="<?php echo htmlspecialchars($clave2)?>" class="form-control" id="clave2" name="clave2" required>
                                     <?php 
                                         if(empty(!$mjeclave2)){ echo "<br><font color='red'>$mjeclave2</font>";}                                             
                                     ?>
@@ -194,7 +249,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="dni" class="form-label">DNI *</label>
-                                    <input type="text" class="form-control" id="dni" name="dni" maxlength="10" inputmode="numeric" required>
+                                    <input type="text"  value="<?php echo htmlspecialchars($dni)?>" class="form-control" id="dni" name="dni" maxlength="10" inputmode="numeric" required>
                                     <?php 
                                         if(empty(!$mjedni)){ echo "<br><font color='red'>$mjedni</font>";}                                             
                                     ?>
@@ -202,7 +257,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="nacimiento" class="form-label">Fecha de nacimiento *</label>
-                                    <input type="date" class="form-control" id="nacimiento" name="nacimiento" required>
+                                    <input type="date"  value="<?php echo htmlspecialchars($nacimiento)?>" class="form-control" id="nacimiento" name="nacimiento" required>
                                     <?php 
                                         if(empty(!$mjefechanac)){ echo "<br><font color='red'>$mjefechanac</font>";}                                             
                                     ?>
@@ -210,7 +265,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-control" id="telefono" name="telefono" maxlength="20">
+                                    <input type="tel"  value="<?php echo htmlspecialchars($telefono)?>" class="form-control" id="telefono" name="telefono" maxlength="20">
                                     <?php 
                                         if(empty(!$mjetelefono)){ echo "<br><font color='red'>$mjetelefono</font>";}                                             
                                     ?>
@@ -218,7 +273,7 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12 col-md-6">
                                     <label for="foto" class="form-label">Foto de perfil</label>
-                                    <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+                                    <input type="file"  class="form-control" id="foto" name="foto" accept="image/*">
                                     <?php 
                                         if(empty(!$mjefoto)){ echo "<br><font color='red'>$mjefoto</font>";}                                             
                                     ?>
@@ -226,18 +281,13 @@ if(isset($_POST['Registrar'])){
 
                                 <div class="col-12">
                                     <label for="intereses" class="form-label">Intereses</label>
-                                    <textarea class="form-control" id="intereses" name="intereses" rows="2"></textarea>
-                                    <?php 
-                                        if(empty(!$mjeintereses)){ echo "<br><font color='red'>$mjeintereses</font>";}                                             
-                                    ?>
+   
+                                    <textarea class="form-control" id="intereses" name="intereses" rows="2" style="resize: none;"><?php echo htmlspecialchars($intereses); ?></textarea>
                                 </div>
 
                                 <div class="col-12">
                                     <label for="antecedentes" class="form-label">Antecedentes</label>
-                                    <textarea class="form-control" id="antecedentes" name="antecedentes" rows="2"></textarea>
-                                    <?php 
-                                        if(empty(!$mjeantecedentes)){ echo "<br><font color='red'>$mjeantecedentes</font>";}                                             
-                                    ?>
+                                    <textarea class="form-control" id="antecedentes" name="antecedentes" rows="2" style="resize: none;"><?php echo htmlspecialchars($antecedentes); ?></textarea>
                                 </div>
 
                                 <div class="col-12 d-grid mt-4">
