@@ -30,7 +30,6 @@ if(isset($_POST['Registrar'])){
     $mail         = trim($mail);
     $dni          = trim($dni);
     $telefono     = trim($telefono);
-    // CORREGIDO: intereses y antecedentes son opcionales, solo se limpian los espacios.
     $intereses    = trim($intereses);
     $antecedentes = trim($antecedentes);
 
@@ -89,69 +88,50 @@ if(isset($_POST['Registrar'])){
             $mjefoto = "La foto debe ser JPG, PNG o WEBP.";
             $error = true;
         }
-    } // CORREGIDO: faltaba esta llave que cierra el if de la foto.
-
-    // CORREGIDO: borré las validaciones de intereses y antecedentes (eran de un checkbox
-    // y un Si/No, pero en el formulario son textareas opcionales).
-
-    // Si no hay errores, se consulta si el mail o el DNI ya existen
+    } 
     if($error === false){
         $conexion = conectar();
-        $mailSeguro = mysqli_real_escape_string($conexion, $mail);
-        $dniSeguro  = mysqli_real_escape_string($conexion, $dni);
-
-        $sql = "SELECT Dni, Mail
-                FROM Usuarios
-                WHERE Dni = '$dniSeguro' OR Mail = '$mailSeguro'";
-
-        $resultado = mysqli_query($conexion, $sql);
-        while($fila = mysqli_fetch_assoc($resultado)){
-            // CORREGIDO: se comparan en minúsculas porque MySQL no distingue mayúsculas en el mail
-            if(strtolower($fila['Mail']) === strtolower($mail)){
-                $mjecorreo = "Ese correo ya está registrado.";
-                $error = true;
-            }
-            if((string)$fila['Dni'] === $dni){
-                $mjedni = "Ese DNI ya está registrado.";
-                $error = true;
-            }
+       if(mail_existente($mail, $conexion)){
+            $mjecorreo = "Este correo ya está registrado.";
+            $error = true;
         }
 
-        // CORREGIDO: el header solo se ejecuta si no hubo errores (antes redirigía siempre)
-        if($error === false){
-// Datos de texto limpios para el SQL ($mail y $dni ya se limpiaron arriba)
-            $nombreSeguro       = mysqli_real_escape_string($conexion, $nombre);
-            $apellidoSeguro     = mysqli_real_escape_string($conexion, $apellido);
-            $nacimientoSeguro   = mysqli_real_escape_string($conexion, $nacimiento);
-            $telefonoSeguro     = mysqli_real_escape_string($conexion, $telefono);
-            $interesesSeguro    = mysqli_real_escape_string($conexion, $intereses);
-            $antecedentesSeguro = mysqli_real_escape_string($conexion, $antecedentes);
+        if(mail_existente($dni,$conexion)){
+            $mjecorreo="Este dni ya se encuentra registrado.";
+            $error=true;
+        }
 
-// La contraseña se guarda con hash. $clave2 no se guarda: solo sirvió para comparar
+        if($error === false){
             $claveHash = password_hash($clave, PASSWORD_DEFAULT);
 
-// Foto (opcional): si no subió ninguna, queda vacío
             $nombreFoto = "";
-            if($_FILES['foto']['error'] === UPLOAD_ERR_OK){
-    // La extensión se toma del tipo real del archivo, no del nombre que trae
-                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-                $tipo = mime_content_type($_FILES['foto']['tmp_name']);
-    // Nombre único para que dos fotos no se pisen
-                $nombreFoto = uniqid() . "." . $extensiones[$tipo];
-                move_uploaded_file($_FILES['foto']['tmp_name'], "imagenes/" . $nombreFoto);
-            }
-            $fotoSeguro = mysqli_real_escape_string($conexion, $nombreFoto);
+                if($_FILES['foto']['error'] === UPLOAD_ERR_OK){
+                    $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                    $tipo = mime_content_type($_FILES['foto']['tmp_name']);
+                    $nombreFoto = uniqid() . "." . $extensiones[$tipo];
+                    move_uploaded_file($_FILES['foto']['tmp_name'], "imagenes/" . $nombreFoto);
+                }
 
-// INSERT: las columnas y los valores van en el mismo orden
-            $sql = "INSERT INTO usuarios(Nombre, Apellido, Mail, `Contraseña`, Dni, Nacimiento, Telefono, Foto, Intereses, Antecedentes, Rol, Plan)
-                    VALUES('$nombreSeguro', '$apellidoSeguro', '$mailSeguro', '$claveHash', '$dniSeguro', '$nacimientoSeguro','$telefonoSeguro', '$fotoSeguro', '$interesesSeguro', '$antecedentesSeguro', 'usuario', 'gratuito')";
+        $datos = [
+            'nombre'       => $nombre,
+            'apellido'     => $apellido,
+            'mail'         => $mail,
+            'clave'        => $claveHash,
+            'dni'          => $dni,
+            'nacimiento'   => $nacimiento,
+            'telefono'     => $telefono,
+            'foto'         => $nombreFoto,
+            'intereses'    => $intereses,
+            'antecedentes' => $antecedentes
+        ];
 
-            mysqli_query($conexion, $sql);
-            //header("Location: login.php");
-            exit();
+    if(insertar_usuario($datos, $conexion)){
+        header("Location: login.php");
+        exit();}
+        
         }
     }
-} // CORREGIDO: faltaba esta llave que cierra el if(isset($_POST['Registrar']))
+} 
 ?>
 <!DOCTYPE html>
 <html lang="es">
