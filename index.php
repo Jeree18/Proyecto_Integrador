@@ -40,30 +40,45 @@ $cursos = $conexion->query($sql);
 </head>
 <body>
 
-<header class="py-3 text-bg-dark sticky-top">
+<header class="py-2 text-bg-dark sticky-top">
   <div class="container-fluid px-3">
     <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-      <a href="index.php" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+
+      <a href="index.php" class="d-flex align-items-center mb-2 mb-lg-0 me-lg-4 text-white text-decoration-none">
         <i class="bi bi-rocket-takeoff-fill text-warning fs-3 me-2"></i>
-        <span class="fs-4 fw-semibold">Cursolandia</span>
+        <span class="fs-5 fw-semibold">Cursolandia</span>
       </a>
-      <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="index.php" class="nav-link px-2 text-white" aria-current="page">Inicio</a></li>
-        <li><a href="#cursos" class="nav-link px-2 text-white">Cursos</a></li>
-        <li><a href="#como-funciona" class="nav-link px-2 text-white">Cómo funciona</a></li>
-        <li><a href="#contacto" class="nav-link px-2 text-white">Contacto</a></li>
+
+      <ul class="nav col-12 col-lg-auto mb-2 justify-content-center mb-md-0">
+        <li><a href="index.php" class="nav-link px-3 text-white">Inicio</a></li>
+        <li><a href="#cursos" class="nav-link px-3 text-white">Cursos</a></li>
+        <li><a href="#como-funciona" class="nav-link px-3 text-white">Cómo funciona</a></li>
+        <li><a href="#contacto" class="nav-link px-3 text-white">Contacto</a></li>
       </ul>
-      <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+
+      <form class="col-12 col-lg-auto mb-3 mb-lg-0 mx-lg-auto" role="search" style="max-width: 300px;">
         <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Buscar..." aria-label="Buscar">
       </form>
+
       <div class="text-end">
         <?php
         if(!isset($_SESSION['Usuario'])){
-        echo "<a href='login.php' class='btn btn-warning'>Iniciar sesión</a>";
-        echo "<a href='Registro.php' class='btn btn-warning'>Registrarse</a>";
+            echo "<a href='login.php' class='btn btn-outline-light me-2'>Iniciar sesión</a>";
+            echo "<a href='registro.php' class='btn btn-warning'>Registrarse</a>";
+        }else{
+            echo "<div class='d-flex align-items-center'>";
+            if($_SESSION['Usuario']['Foto'] != ""){
+                echo "<img src='imagenes/".$_SESSION['Usuario']['Foto']."' class='rounded-circle' width='40' height='40' style='object-fit: cover;'>";
+            }else{
+                echo "<i class='bi bi-person-circle text-white fs-2'></i>";
+            }
+            echo "<span class='text-white fw-normal mx-2'>".htmlspecialchars($_SESSION['Usuario']['Nombre'])." ".htmlspecialchars($_SESSION['Usuario']['Apellido'])."</span>";
+            echo "<a href='cerrar_sesion.php' class='btn btn-outline-light btn-sm'>Cerrar sesión</a>";
+            echo "</div>";
         }
-        ?>     
-        </div>
+        ?>
+      </div>
+
     </div>
   </div>
 </header>
