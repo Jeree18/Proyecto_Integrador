@@ -47,7 +47,6 @@ $cursos = $conexion->query($sql);
         <i class="bi bi-rocket-takeoff-fill text-warning fs-3 me-2"></i>
         <span class="fs-4 fw-semibold">Cursolandia</span>
       </a>
-      <!-- Solo links que existen, todos del mismo color -->
       <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
         <li><a href="index.php" class="nav-link px-2 text-white" aria-current="page">Inicio</a></li>
         <li><a href="#cursos" class="nav-link px-2 text-white">Cursos</a></li>
@@ -58,9 +57,13 @@ $cursos = $conexion->query($sql);
         <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Buscar..." aria-label="Buscar">
       </form>
       <div class="text-end">
-        <button type="button" class="btn btn-outline-light me-2">Iniciar sesión</button>
-        <a href="Registro.php" class="btn btn-warning">Registrarse</a>
-      </div>
+        <?php
+        if(!isset($_SESSION['Usuario'])){
+        echo "<a href='login.php' class='btn btn-warning'>Iniciar sesión</a>";
+        echo "<a href='Registro.php' class='btn btn-warning'>Registrarse</a>";
+        }
+        ?>     
+        </div>
     </div>
   </div>
 </header>

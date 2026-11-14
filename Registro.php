@@ -1,8 +1,7 @@
 <?php
 session_start();
 include "Persistencia/Conexion.php";
-// CORREGIDO: saqué el $conexion=conectar(); de acá. Se conecta más abajo, solo cuando hace falta.
-$nombre="";
+$errorcarga="";$nombre="";
 $apellido="";
 $mail="";
 $clave="";
@@ -21,7 +20,6 @@ $mjedni="";
 $mjefechanac="";
 $mjetelefono="";
 $mjefoto="";
-// CORREGIDO: eliminé $mjeintereses y $mjeantecedentes porque esos campos son opcionales.
 $error=false;
 if(isset($_POST['Registrar'])){
     extract($_POST);
@@ -33,22 +31,22 @@ if(isset($_POST['Registrar'])){
     $intereses    = trim($intereses);
     $antecedentes = trim($antecedentes);
 
-    if($nombre === "" || mb_strlen($nombre) < 2 || mb_strlen($nombre) > 50){
+    if( strlen($nombre) < 2 || strlen($nombre) > 50){
         $mjenombre = "El nombre debe tener entre 2 y 50 caracteres.";
         $error = true;
     }
 
-    if($apellido === "" || mb_strlen($apellido) < 2 || mb_strlen($apellido) > 50){
+    if( strlen($apellido) < 2 || strlen($apellido) > 50){
         $mjeapellido = "El apellido debe tener entre 2 y 50 caracteres.";
         $error = true;
     }
 
-    if($mail === "" || !filter_var($mail, FILTER_VALIDATE_EMAIL) || mb_strlen($mail) > 100){
+    if(!filter_var($mail, FILTER_VALIDATE_EMAIL) || strlen($mail) > 100){
         $mjecorreo = "Ingresá un correo válido.";
         $error = true;
     }
 
-    if($clave === "" || strlen($clave) < 8 || strlen($clave) > 72){
+    if(strlen($clave) < 8 || strlen($clave) > 72){
         $mjeclave = "La contraseña debe tener entre 8 y 72 caracteres.";
         $error = true;
     }
@@ -63,8 +61,7 @@ if(isset($_POST['Registrar'])){
         $error = true;
     }
 
-    $partes = explode("-", $nacimiento);
-    if(count($partes) !== 3 || !checkdate((int)$partes[1], (int)$partes[2], (int)$partes[0]) || $nacimiento > date("Y-m-d")){
+    if($nacimiento == "" || $nacimiento > date("Y-m-d")){
         $mjefechanac = "Ingresá una fecha de nacimiento válida.";
         $error = true;
     }
@@ -75,8 +72,8 @@ if(isset($_POST['Registrar'])){
         $error = true;
     }
 
-    // La foto es opcional: los controles solo se hacen si eligió un archivo
     $errorFoto = $_FILES['foto']['error'];
+    $tipoFoto = $_FILES['foto']['type'];
     if($errorFoto !== UPLOAD_ERR_NO_FILE){
         if($errorFoto !== UPLOAD_ERR_OK){
             $mjefoto = "No se pudo subir la foto. Probá con otra.";
@@ -84,54 +81,66 @@ if(isset($_POST['Registrar'])){
         } elseif($_FILES['foto']['size'] > 2 * 1024 * 1024){
             $mjefoto = "La foto no puede pesar más de 2 MB.";
             $error = true;
-        } elseif(!in_array(mime_content_type($_FILES['foto']['tmp_name']), ['image/jpeg', 'image/png', 'image/webp'])){
+        } elseif($tipoFoto != "image/jpeg" && $tipoFoto != "image/png" && $tipoFoto != "image/webp"){
             $mjefoto = "La foto debe ser JPG, PNG o WEBP.";
             $error = true;
         }
-    } 
-    if($error === false){
+    }
+        if($error === false){
         $conexion = conectar();
-       if(mail_existente($mail, $conexion)){
+        $mail = mysqli_real_escape_string($conexion, $mail);
+        $dni = mysqli_real_escape_string($conexion, $dni);
+
+        $resultado = mysqli_query($conexion, "SELECT Mail FROM usuarios WHERE Mail = '$mail'");
+        if(mysqli_num_rows($resultado) > 0){
             $mjecorreo = "Este correo ya está registrado.";
             $error = true;
         }
 
-        if(mail_existente($dni,$conexion)){
-            $mjecorreo="Este dni ya se encuentra registrado.";
-            $error=true;
+        $resultado = mysqli_query($conexion, "SELECT Dni FROM usuarios WHERE Dni = '$dni'");
+        if(mysqli_num_rows($resultado) > 0){
+            $mjedni = "Este dni ya se encuentra registrado.";
+            $error = true;
         }
 
+        if($error === true){
+            mysqli_close($conexion);
+        }
         if($error === false){
             $claveHash = password_hash($clave, PASSWORD_DEFAULT);
 
             $nombreFoto = "";
-                if($_FILES['foto']['error'] === UPLOAD_ERR_OK){
-                    $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-                    $tipo = mime_content_type($_FILES['foto']['tmp_name']);
-                    $nombreFoto = uniqid() . "." . $extensiones[$tipo];
+            if($_FILES['foto']['error'] === UPLOAD_ERR_OK){
+                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                $tipo = mime_content_type($_FILES['foto']['tmp_name']);
+                $nombreFoto = uniqid() . "." . $extensiones[$tipo];
+            }
+
+            $nombre = mysqli_real_escape_string($conexion, $nombre);
+            $apellido = mysqli_real_escape_string($conexion, $apellido);
+            $telefono = mysqli_real_escape_string($conexion, $telefono);
+            $intereses = mysqli_real_escape_string($conexion, $intereses);
+            $antecedentes = mysqli_real_escape_string($conexion, $antecedentes);
+            $nacimiento = mysqli_real_escape_string($conexion, $nacimiento);
+
+            $sql = "INSERT INTO usuarios(Nombre, Apellido, Mail, `Contraseña`, Dni, Nacimiento, Telefono, Foto, Intereses, Antecedentes, Rol, Plan)
+                    VALUES('$nombre', '$apellido', '$mail', '$claveHash', '$dni', '$nacimiento', '$telefono', '$nombreFoto', '$intereses', '$antecedentes', 'usuario', 'gratuito')";
+
+            try{
+                mysqli_query($conexion, $sql);
+                if($nombreFoto !== ""){
                     move_uploaded_file($_FILES['foto']['tmp_name'], "imagenes/" . $nombreFoto);
                 }
-
-        $datos = [
-            'nombre'       => $nombre,
-            'apellido'     => $apellido,
-            'mail'         => $mail,
-            'clave'        => $claveHash,
-            'dni'          => $dni,
-            'nacimiento'   => $nacimiento,
-            'telefono'     => $telefono,
-            'foto'         => $nombreFoto,
-            'intereses'    => $intereses,
-            'antecedentes' => $antecedentes
-        ];
-
-    if(insertar_usuario($datos, $conexion)){
-        header("Location: login.php");
-        exit();}
-        
+                mysqli_close($conexion);
+                header("Location: login.php");
+                exit();
+            }catch(mysqli_sql_exception $e){
+                mysqli_close($conexion);
+                $errorcarga = "Error al cargar usuario, intentelo de nuevo.";
+            }
         }
     }
-} 
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -180,6 +189,9 @@ if(isset($_POST['Registrar'])){
                             <h1 class="h3 mb-1">Crear cuenta</h1>
                             <p class="text-secondary mb-0">Los campos con * son obligatorios.</p>
                         </div>
+                        <?php if($errorcarga !== ""){ ?>
+                                        <div class="text-danger mb-2"><?php echo $errorcarga; ?></div>
+                        <?php } ?>
 
                         <!-- Acá imprimí los errores de tu validación, por ejemplo:
                              <div class="alert alert-danger" role="alert"> ... </div> -->
@@ -270,10 +282,10 @@ if(isset($_POST['Registrar'])){
                                     <textarea class="form-control" id="antecedentes" name="antecedentes" rows="2" style="resize: none;"><?php echo htmlspecialchars($antecedentes); ?></textarea>
                                 </div>
 
-                                <div class="col-12 d-grid mt-4">
+                                <div class="col-12 d-grid mt-4">                                                 
                                     <button type="submit" class="btn btn-warning btn-lg" name="Registrar">Crear cuenta</button>
                                 </div>
-
+                            
                             </div>
                         </form>
 
