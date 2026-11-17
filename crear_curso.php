@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 include "Persistencia/Conexion.php";
 $errtitulo="";
@@ -10,26 +12,36 @@ if(!isset($_SESSION['Usuario'])){
 header("location:login.php");
 exit();
 }
+$error = false;
+$errtitulo = $errdesc = $errinicio = $errfin = $errcosto = $errcupo = $errpublico = $errlimite = "";
+$error = false;
+$titulo = $descripcion = $fecha_inicio = $fecha_fin = $costo = $cupo = $etiquetas ="";
+$publico = "si";
+
 if(isset($_POST['crear'])){
-extract($_POST);
-$titulo = trim($titulo);
-$descripcion = trim($descripcion);
-$fecha_inicio = trim($fecha_inicio);
-$fecha_fin = trim($fecha_fin);
-$costo = trim($costo);
-$cupo = trim($cupo);
-$etiquetas = trim($etiquetas);
+    $titulo       = trim($_POST['titulo'] ?? "");
+    $descripcion  = trim($_POST['descripcion'] ?? "");
+    $fecha_inicio = trim($_POST['fecha_inicio'] ?? "");
+    $fecha_fin    = trim($_POST['fecha_fin'] ?? "");
+    $costo        = trim($_POST['costo'] ?? "");
+    $cupo         = trim($_POST['cupo'] ?? "");
+    $etiquetas    = trim($_POST['etiquetas'] ?? "");
+    $publico      = $_POST['publico'] ?? "";
+
  if($titulo == ""){
         $errtitulo = "Ingresá el título del curso.";
         $error = true;
-    }elseif(mb_strlen($titulo) > 100){
-        $errtitulo = "Título demasiado largo.";
+    }elseif(mb_strlen($titulo) < 3 || mb_strlen($titulo) > 100 ){
+        $errtitulo = "Título incorrecto.";
         $error = true;
     }
     if($descripcion == ""){
         $errdesc = "Ingresá la descripción del curso.";
         $error = true;
-    }
+    }elseif(mb_strlen($descripcion) < 8){
+        $errdesc = "La descripción debe tener al menos 8 caracteres.";
+        $error = true;
+    }   
      if($fecha_inicio == ""){
         $errinicio = "Ingresá la fecha de inicio.";
         $error = true;
@@ -68,10 +80,23 @@ $etiquetas = trim($etiquetas);
         $errcupo = "Catidad  de cupos incorrecta.";
         $error = true;
     }
+    if($publico != "si" && $publico != "no"){
+        $errpublico = "Elegí si el curso es público o privado.";
+        $error = true;
+    }
     if($error == false){
         $conexion = conectar();
         $idcreador = (int)$_SESSION['Usuario']['ID'];
-
+        if($_SESSION['Usuario']['Plan'] != 'pro'){
+            $res = mysqli_query($conexion, "SELECT COUNT(*) AS total FROM cursos WHERE ID_Creador = $idcreador AND Fecha_Fin >= CURDATE()");
+            $fila = mysqli_fetch_assoc($res);
+        if($fila['total'] >= 3){
+            $errlimite = "Con el plan gratuito solo podés tener hasta 3 cursos activos.";
+            $error = true;
+            }
+        }
+        if(!$error){
+        $publicoSeguro = mysqli_real_escape_string($conexion, $publico);
         $tituloSeguro = mysqli_real_escape_string($conexion, $titulo);
         $descSegura = mysqli_real_escape_string($conexion, $descripcion);
         $inicioSeguro = mysqli_real_escape_string($conexion, $fecha_inicio);
@@ -80,7 +105,7 @@ $etiquetas = trim($etiquetas);
         $cupoSeguro = (int)$cupo;
 
         mysqli_query($conexion, "INSERT INTO cursos (Titulo, Descripcion, Costo, Cupo, Fecha_Inicio, Fecha_Fin, ID_Creador, Publico)
-        VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publico')");
+        VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publicoSeguro')");
 
         $idcurso = mysqli_insert_id($conexion);
         mysqli_close($conexion);
@@ -89,6 +114,7 @@ $etiquetas = trim($etiquetas);
 
         header("Location: index.php");
         exit();
+        }
     }
 }
 
@@ -159,55 +185,59 @@ $etiquetas = trim($etiquetas);
                         </div>
 
                         <form action="crear_curso.php" method="post" novalidate>
+                            <?php if($errlimite != ""){ ?>
+                                <div class="col-12"><div class="alert alert-danger"><?php echo $errlimite; ?></div></div>
+                            <?php } ?>
                             <div class="row g-3">
-
                                 <div class="col-12">
                                     <label for="titulo" class="form-label">Título *</label>
-                                    <input type="text" class="form-control" id="titulo" name="titulo" maxlength="100" required>
-                                    
+                                    <input type="text" class="form-control <?php if($errtitulo != "") echo 'is-invalid'; ?>" id="titulo" name="titulo" maxlength="100" value="<?php echo htmlspecialchars($titulo); ?>">
+                                    <div class="invalid-feedback"><?php echo $errtitulo; ?></div>
                                 </div>
 
                                 <div class="col-12">
                                     <label for="descripcion" class="form-label">Descripción *</label>
-                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
-                                    
+                                    <textarea class="form-control <?php if($errdesc != "") echo 'is-invalid'; ?>" id="descripcion" name="descripcion" rows="4"><?php echo htmlspecialchars($descripcion); ?></textarea>
+                                    <div class="invalid-feedback"><?php echo $errdesc; ?></div>
                                 </div>
 
                                 <div class="col-12 col-md-6">
                                     <label for="fecha_inicio" class="form-label">Fecha de inicio *</label>
-                                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
-                                    >
+                                    <input type="date" class="form-control <?php if($errin != "") echo 'is-invalid'; ?>" id="fecha_inicio" name="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio); ?>"required>
+                                    <div class="invalid-feedback"><?php echo $errin; ?></div>
                                 </div>
 
                                 <div class="col-12 col-md-6">
-                                    <label for="fecha_fin" class="form-label">Fecha de fin *</label>
-                                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
-                                    
+                                    <label for="fecha_fin" class="form-label">Fecha de finalización *</label>
+                                    <input type="date" class="form-control <?php if($errfin != "") echo 'is-invalid'; ?>" id="fecha_fin" name="fecha_fin" value="<?php echo htmlspecialchars($fecha_fin); ?>" required>
+                                    <div class="invalid-feedback"><?php echo $errfin; ?></div>
                                 </div>
 
                                 <div class="col-12 col-md-6">
                                     <label for="costo" class="form-label">Costo <span class="text-secondary"></span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="costo" name="costo" min="0" step="0.01">
+                                        <input type="number" class="form-control <?php if($errcosto != "") echo 'is-invalid'; ?>" id="costo" name="costo" min="0" step="0.01" value="<?php echo htmlspecialchars($costo); ?>">
+                                        <div class="invalid-feedback"><?php echo $errcosto; ?></div>
                                     </div>
                                     
                                 </div>
 
                                 <div class="col-12 col-md-6">
                                     <label for="cupo" class="form-label">Cupo <span class="text-secondary"></span></label>
-                                    <input type="number" class="form-control" id="cupo" name="cupo" min="1">
+                                    <input type="number" class="form-control <?php if($errcupo != "") echo 'is-invalid'; ?>" id="cupo" name="cupo" min="0" value="<?php echo htmlspecialchars($cupo); ?>">
+                                    <div class="invalid-feedback"><?php echo $errcupo; ?></div>
                                     
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label d-block">Acceso *</label>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="publico" id="acceso_publico" value="si" checked>
+                                        <input class="form-check-input" type="radio" name="publico" id="acceso_publico" value="si" <?php if($publico != "no") echo 'checked'; ?>>
                                         <label class="form-check-label" for="acceso_publico">Público</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="publico" id="acceso_privado" value="no">
+                                        <input class="form-check-input" type="radio" name="publico" id="acceso_privado" value="no" <?php if($publico == "no") echo 'checked'; ?>>
                                         <label class="form-check-label" for="acceso_privado">Privado</label>
                                     </div>
                                 </div>
