@@ -73,6 +73,7 @@ $cursos = $conexion->query($sql);
                 echo "<i class='bi bi-person-circle text-white fs-2'></i>";
             }
             echo "<span class='text-white fw-normal mx-2'>".htmlspecialchars($_SESSION['Usuario']['Nombre'])." ".htmlspecialchars($_SESSION['Usuario']['Apellido'])."</span>";
+            echo "<a href='Mis_cursos.php' class='btn btn-warning btn-sm me-2'>Mis cursos</a>";
             echo "<a href='cerrar_sesion.php' class='btn btn-outline-light btn-sm'>Cerrar sesión</a>";
             echo "</div>";
         }
