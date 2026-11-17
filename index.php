@@ -10,7 +10,7 @@ $sql = "SELECT cursos.*, COUNT(inscripcion.ID_Usuario) AS cantidad_inscriptos
         WHERE creador.Plan = 'pro'
         GROUP BY cursos.ID
         ORDER BY cantidad_inscriptos DESC, cursos.ID DESC
-        LIMIT 3";//esta consulta solo devuelve a los cursos que son creados por un usuario de plan pro y muestra por prioridad al curso con mas inscriptos o por otro lado el curso que sea mas reciente
+        LIMIT 3";
 $destacados = $conexion->query($sql);
 $sql="(SELECT cursos.*, creador.Plan AS plan_creador
       FROM cursos
@@ -85,7 +85,6 @@ $cursos = $conexion->query($sql);
 
 <main>
 
-  <!-- 1. CARRUSEL: PRESENTACIÓN + CURSOS DESTACADOS -->
   <section aria-label="Cursos destacados">
     <div id="carruselCursos" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-indicators">
@@ -97,7 +96,6 @@ $cursos = $conexion->query($sql);
       </div>
       <div class="carousel-inner">
 
-        <!-- Slide 0: presentación (lleva el h1 de la página). Misma estructura que las otras slides -->
         <div class="carousel-item active slide-curso slide-0">
           <div class="container carousel-caption-custom">
             <div class="row align-items-center">
@@ -110,7 +108,6 @@ $cursos = $conexion->query($sql);
                 </div>
               </div>
               <div class="col-md-4 d-none d-md-block text-center">
-                <!-- Poné tu imagen en Imagenes/portada.jpg (o cambiá el nombre en src) -->
                 <img src="Imagenes/imagen1.jpg" alt="Personas aprendiendo en Cursolandia" class="slide-imagen rounded shadow">
               </div>
             </div>
@@ -148,7 +145,6 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <!-- 2. QUÉ PODÉS HACER (justo después del carrusel) -->
   <section id="que-puedo-hacer" class="py-5 bg-soft">
     <div class="container">
       <h2 class="fw-bold text-center mb-5">Qué podés hacer</h2>
@@ -175,7 +171,7 @@ $cursos = $conexion->query($sql);
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Publicarlo para que otros se inscriban</li>
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Ver quiénes se inscribieron</li>
               </ul>
-              <a href="#" class="btn btn-warning">Crear un curso</a>
+              <a href="crear_curso.php" class="btn btn-warning">Crear un curso</a>
             </div>
           </div>
         </div>
@@ -183,7 +179,6 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <!-- 3. CÓMO FUNCIONA (antes del listado) -->
   <section id="como-funciona" class="py-5">
     <div class="container">
       <h2 class="fw-bold text-center mb-5">Cómo funciona</h2>
@@ -219,7 +214,6 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <!-- 4. LISTADO DE CURSOS -->
   <section id="cursos" class="py-5 bg-soft">
     <div class="container">
       <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
@@ -237,10 +231,9 @@ $cursos = $conexion->query($sql);
 
                 <div class="card h-100 shadow-sm">
 
-                  <!-- Parte de arriba: la imagen -->
                   <img src="<?= htmlspecialchars($c["Imagen"])?>" class="card-img-top" alt="..." style="height: 180px; object-fit: cover;">
 
-                  <!-- Parte de abajo: los detalles -->
+                  
                   <div class="card-body d-flex flex-column">
                     <h3 class="h5 card-title"><?= htmlspecialchars($c["Titulo"])?></h3>
                     <p class="card-text text-secondary"><?= htmlspecialchars($c["Descripcion"])?></p>
@@ -261,7 +254,6 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <!-- 5. POR QUÉ PODÉS CONFIAR -->
   <section id="confianza" class="py-5">
     <div class="container">
       <h2 class="fw-bold text-center mb-1">Por qué podés confiar</h2>
@@ -285,7 +277,6 @@ $cursos = $conexion->query($sql);
       </div>
 
       <h3 class="h5 text-center mb-4">Lo que dicen quienes ya lo usaron</h3>
-      <!-- Reseñas de ejemplo: reemplazalas por opiniones reales cuando las tengas -->
       <div class="row row-cols-1 row-cols-md-3 g-4">
         <div class="col"><figure class="card card-cl-left shadow-sm h-100 p-3 mb-0">
           <blockquote class="blockquote fs-6">Me inscribí en minutos y pude empezar el mismo día.</blockquote>

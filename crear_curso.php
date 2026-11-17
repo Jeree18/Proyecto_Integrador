@@ -1,25 +1,98 @@
 <?php
 session_start();
+include "Persistencia/Conexion.php";
+$errtitulo="";
+$errdesc="";
+$errinicio="";
+$errfin="";
+$errcosto="";
 if(!isset($_SESSION['Usuario'])){
 header("location:login.php");
 exit();
 }
 if(isset($_POST['crear'])){
+extract($_POST);
+$titulo = trim($titulo);
+$descripcion = trim($descripcion);
+$fecha_inicio = trim($fecha_inicio);
+$fecha_fin = trim($fecha_fin);
+$costo = trim($costo);
+$cupo = trim($cupo);
+$etiquetas = trim($etiquetas);
+ if($titulo == ""){
+        $errtitulo = "Ingresá el título del curso.";
+        $error = true;
+    }elseif(mb_strlen($titulo) > 100){
+        $errtitulo = "Título demasiado largo.";
+        $error = true;
+    }
+    if($descripcion == ""){
+        $errdesc = "Ingresá la descripción del curso.";
+        $error = true;
+    }
+     if($fecha_inicio == ""){
+        $errinicio = "Ingresá la fecha de inicio.";
+        $error = true;
+    }else{
+        $partes = explode("-", $fecha_inicio);
+        if(count($partes) != 3 || !checkdate((int)$partes[1], (int)$partes[2], (int)$partes[0])){
+            $errinicio = "La fecha de inicio no es válida.";
+            $error = true;
+        }
+    }
 
+    if($fecha_fin == ""){
+        $errfin = "Ingresá la fecha de finalizacion.";
+        $error = true;
+    }else{
+        $partes = explode("-", $fecha_fin);
+        if(count($partes) != 3 || !checkdate((int)$partes[1], (int)$partes[2], (int)$partes[0])){
+            $errfin = "La fecha de fin no es válida.";
+            $error = true;
+        }elseif($errinicio == "" && $fecha_fin < $fecha_inicio){
+            $errfin = "La fecha de finalizacion no puede ser anterior a la de inicio.";
+            $error = true;
+        }
+    }
 
+    if($costo == ""){
+        $costo = 0;
+    }elseif(!is_numeric($costo) || $costo < 0){
+        $errcosto = "El costo incorrecto.";
+        $error = true;
+    }
 
+    if($cupo == ""){
+        $cupo = 0;
+    }elseif(filter_var($cupo, FILTER_VALIDATE_INT) === false || $cupo < 0){
+        $errcupo = "Catidad  de cupos incorrecta.";
+        $error = true;
+    }
+    if($error == false){
+        $conexion = conectar();
+        $idcreador = (int)$_SESSION['Usuario']['ID'];
 
+        $tituloSeguro = mysqli_real_escape_string($conexion, $titulo);
+        $descSegura = mysqli_real_escape_string($conexion, $descripcion);
+        $inicioSeguro = mysqli_real_escape_string($conexion, $fecha_inicio);
+        $finSeguro = mysqli_real_escape_string($conexion, $fecha_fin);
+        $costoSeguro = (float)$costo;
+        $cupoSeguro = (int)$cupo;
 
+        mysqli_query($conexion, "INSERT INTO cursos (Titulo, Descripcion, Costo, Cupo, Fecha_Inicio, Fecha_Fin, ID_Creador, Publico)
+        VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publico')");
 
+        $idcurso = mysqli_insert_id($conexion);
+        mysqli_close($conexion);
 
+        // aca irian las etiquetas
 
-
-
-
-
+        header("Location: index.php");
+        exit();
+    }
 }
 
-
+    
 ?>
 
 
