@@ -1,10 +1,53 @@
 <?php
+include "Persistencia/Conexion.php";
 session_start();
 if(!isset($_SESSION['Usuario'])){
     header("location:login.php");
     exit();
 }
+$conexion = conectar();
+$idusuario = (int)$_SESSION['Usuario']['ID'];
+$hoy = date("Y-m-d");
 
+// Cursos que creé, con la cantidad de inscriptos
+$creados = mysqli_query($conexion, "SELECT c.ID, c.Titulo, c.Descripcion, c.Costo, c.Cupo, c.Fecha_Inicio, c.Fecha_Fin, c.Publico, c.Imagen,
+                                    COUNT(i.ID_Usuario) AS inscriptos
+                                    FROM cursos c
+                                    LEFT JOIN inscripcion i ON i.ID_Curso = c.ID AND i.Estado IN ('activa','pendiente')
+                                    WHERE c.ID_Creador = $idusuario
+                                    GROUP BY c.ID
+                                    ORDER BY c.Fecha_Fin DESC");
+
+// Cursos en los que estoy inscripto
+$inscripto = mysqli_query($conexion, "SELECT c.ID, c.Titulo, c.Descripcion, c.Costo, c.Fecha_Inicio, c.Fecha_Fin, c.Publico, c.Imagen,
+                                      i.Estado, i.Fecha_Inscripcion, u.Nombre, u.Apellido
+                                      FROM inscripcion i
+                                      INNER JOIN cursos c ON c.ID = i.ID_Curso
+                                      INNER JOIN usuarios u ON u.ID = c.ID_Creador
+                                      WHERE i.ID_Usuario = $idusuario
+                                      ORDER BY i.Fecha_Inscripcion DESC");
+
+// Estado del curso según sus fechas
+    function estado_curso($inicio, $fin, $hoy){
+        if($hoy < $inicio){
+            return ["Próximo", "text-bg-dark"];
+        }elseif($hoy > $fin){
+            return ["Finalizado", "bg-secondary"];
+        }
+        return ["Activo", "bg-warning text-dark"];
+    }
+
+// Estado de mi inscripción
+    function estado_inscripcion($estado){
+        if($estado == "pendiente"){
+            return ["Pendiente de confirmación", "bg-warning-subtle text-dark border border-warning"];
+        }elseif($estado == "cancelada"){
+            return ["Cancelada", "bg-secondary"];
+        }elseif($estado == "finalizada"){
+            return ["Finalizada", "bg-secondary"];
+        }
+        return ["Inscripción activa", "bg-warning text-dark"];
+    }
 
 ?>
 
@@ -73,105 +116,77 @@ if(!isset($_SESSION['Usuario'])){
         </div>
 
         <!--cursos creados -->
-        <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-4"><i class="bi bi-mortarboard-fill text-warning me-2"></i>Cursos creados</h2>
+        <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-4"> 
+            <i class="bi bi-mortarboard-fill text-warning me-2"></i>Cursos creados
+            <span class="badge text-bg-dark ms-2"><?php echo mysqli_num_rows($creados); ?></span>
 
-        <div class="row g-4 mb-5">
+        </h2>
+        <?php if(mysqli_num_rows($creados) == 0){ ?>
+            <div class="alert alert-secondary mb-5">Todavía no creaste ningún curso.</div>
+        <?php }else{ ?>
 
+    <div class="row g-4 mb-5">
+        <?php while($curso = mysqli_fetch_assoc($creados)){
+             $estado = estado_curso($curso['Fecha_Inicio'], $curso['Fecha_Fin'], $hoy);
+        ?>
             <!-- Tarjeta de ejemplo 1: activo -->
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card card-cl curso-card shadow-sm h-100 border-0 border-top border-warning border-4">
-                    <img src="imagenes/imagen1.jpg" class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
+                    <img src="<?php echo htmlspecialchars($curso['Imagen']); ?>"class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
                         <div class="mb-2">
-                            <span class="badge bg-warning text-dark">Activo</span>
-                            <span class="badge border border-dark text-dark">Público</span>
+                            <span class="badge <?php echo $estado[1]; ?>"><?php echo $estado[0]; ?></span>
+                            <span class="badge border border-dark text-dark"><?php echo $curso['Publico'] == 'si' ? 'Público' : 'Privado'; ?></span>
                         </div>
-                        <h3 class="h5">Título del curso</h3>
-                        <p class="text-secondary small flex-grow-1">Descripción corta del curso, que se recorta a unos 100 caracteres...</p>
+                        <h3 class="h5"><?php echo htmlspecialchars($curso['Titulo']); ?></h3>
+                        <p class="text-secondary small flex-grow-1"><?php echo htmlspecialchars(mb_strimwidth($curso['Descripcion'], 0, 100, "...")); ?></p>
                         <ul class="list-unstyled small mb-3">
-                            <li><i class="bi bi-calendar-event text-warning me-1"></i>01/12/2026 al 31/12/2026</li>
-                            <li><i class="bi bi-cash text-warning me-1"></i>Gratuito</li>
-                            <li><i class="bi bi-people text-warning me-1"></i>3 inscriptos de 20</li>
+                            <li><i class="bi bi-calendar-event text-warning me-1"></i><?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?> al <?php echo date("d/m/Y", strtotime($curso['Fecha_Fin'])); ?></li>
+                            <li><i class="bi bi-cash text-warning me-1"></i><?php echo $curso['Costo'] > 0 ? '$'.number_format($curso['Costo'], 2, ',', '.') : 'Gratuito'; ?></li>
+                            <li><i class="bi bi-people text-warning me-1"></i><?php echo $curso['inscriptos']; ?> inscriptos<?php echo $curso['Cupo'] > 0 ? ' de '.$curso['Cupo'] : ' (sin límite de cupo)'; ?></li>
                         </ul>
-                        <a href="curso.php" class="btn btn-dark btn-sm">Ver curso</a>
+                        <a href="curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ver curso</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Tarjeta de ejemplo 2: próximo -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card card-cl curso-card shadow-sm h-100 border-0 border-top border-warning border-4">
-                    <img src="imagenes/imagen1.jpg" class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge text-bg-dark">Próximo</span>
-                            <span class="badge border border-dark text-dark">Privado</span>
-                        </div>
-                        <h3 class="h5">Otro curso</h3>
-                        <p class="text-secondary small flex-grow-1">Otra descripción de ejemplo para ver cómo se acomodan las tarjetas...</p>
-                        <ul class="list-unstyled small mb-3">
-                            <li><i class="bi bi-calendar-event text-warning me-1"></i>15/01/2027 al 15/02/2027</li>
-                            <li><i class="bi bi-cash text-warning me-1"></i>$5.000,00</li>
-                            <li><i class="bi bi-people text-warning me-1"></i>0 inscriptos (sin límite de cupo)</li>
-                        </ul>
-                       <a href="curso.php" class="btn btn-dark btn-sm">Ver curso</a>
-                    </div>
-                </div>
+        <?php } ?>
             </div>
-
-        </div>
-
-        <div class="alert alert-secondary mb-5">Todavía no creaste ningún curso.</div>
+        <?php } ?>
                 <!-- cursos inscriptos -->
-        <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-4"><i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Cursos en los que estoy inscripto</h2>
-
+        <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-4">
+            <i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Cursos en los que estoy inscripto
+            <span class="badge text-bg-dark ms-2"><?php echo mysqli_num_rows($inscripto); ?></span>
+        </h2>
+        <?php if(mysqli_num_rows($inscripto) == 0){ ?>
+            <div class="alert alert-secondary mt-4">Todavía no te inscribiste en ningún curso.</div>
+        <?php }else{ ?>
         <div class="row g-4">
-
+        <?php while($curso = mysqli_fetch_assoc($inscripto)){
+            $estado = estado_inscripcion($curso['Estado']);
+        ?>
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card card-cl curso-card shadow-sm h-100 border-0 border-top border-warning border-4">
-                    <img src="imagenes/imagen1.jpg" class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
+                    <img src="<?php echo htmlspecialchars($curso['Imagen']); ?>" class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
                         <div class="mb-2">
-                            <span class="badge bg-warning text-dark">Inscripción activa</span>
-                            <span class="badge border border-dark text-dark">Público</span>
+                            <span class="badge <?php echo $estado[1]; ?>"><?php echo $estado[0]; ?></span>
+                            <span class="badge border border-dark text-dark"><?php echo $curso['Publico'] == 'si' ? 'Público' : 'Privado'; ?></span>
                         </div>
-                        <h3 class="h5">Curso de bases de datos</h3>
-                        <p class="text-secondary small flex-grow-1">Descripción corta del curso al que estoy inscripto...</p>
+                        <h3 class="h5"><?php echo htmlspecialchars($curso['Titulo']); ?></h3>
+                        <p class="text-secondary small flex-grow-1"><?php echo htmlspecialchars(mb_strimwidth($curso['Descripcion'], 0, 100, "...")); ?></p>
                         <ul class="list-unstyled small mb-3">
-                            <li><i class="bi bi-person text-warning me-1"></i>Creado por Ana Pérez</li>
-                            <li><i class="bi bi-calendar-event text-warning me-1"></i>01/12/2026 al 31/12/2026</li>
-                            <li><i class="bi bi-cash text-warning me-1"></i>Gratuito</li>
-                            <li><i class="bi bi-check2-circle text-warning me-1"></i>Inscripto desde el 20/11/2026</li>
+                            <li><i class="bi bi-person text-warning me-1"></i>Dictado por <?php echo htmlspecialchars($curso['Nombre']." ".$curso['Apellido']); ?></li>
+                            <li><i class="bi bi-calendar-event text-warning me-1"></i><?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?> al <?php echo date("d/m/Y", strtotime($curso['Fecha_Fin'])); ?></li>
+                            <li><i class="bi bi-cash text-warning me-1"></i><?php echo $curso['Costo'] > 0 ? '$'.number_format($curso['Costo'], 2, ',', '.') : 'Gratuito'; ?></li>
+                            <li><i class="bi bi-check2-circle text-warning me-1"></i>Inscripto desde el <?php echo date("d/m/Y", strtotime($curso['Fecha_Inscripcion'])); ?></li>
                         </ul>
-                        <a href="curso.php" class="btn btn-dark btn-sm">Ir al curso</a>
+                        <a href="curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ir al curso</a>
                     </div>
                 </div>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card card-cl curso-card shadow-sm h-100 border-0 border-top border-warning border-4">
-                    <img src="imagenes/imagen1.jpg" class="card-img-top" alt="" style="height: 160px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-secondary">Finalizada</span>
-                            <span class="badge border border-dark text-dark">Público</span>
-                        </div>
-                        <h3 class="h5">Introducción a PHP</h3>
-                        <p class="text-secondary small flex-grow-1">Otro curso de ejemplo ya terminado...</p>
-                        <ul class="list-unstyled small mb-3">
-                            <li><i class="bi bi-person text-warning me-1"></i>Creado por Luis Gómez</li>
-                            <li><i class="bi bi-calendar-event text-warning me-1"></i>01/09/2026 al 30/09/2026</li>
-                            <li><i class="bi bi-cash text-warning me-1"></i>$3.000,00</li>
-                            <li><i class="bi bi-check2-circle text-warning me-1"></i>Inscripto desde el 02/09/2026</li>
-                        </ul>
-                        <a href="curso.php" class="btn btn-dark btn-sm">Ir al curso</a>
-                    </div>
-                </div>
-            </div>
-
+        <?php } ?>
         </div>
-
-        <div class="alert alert-secondary mt-4">Todavía no te inscribiste en ningún curso.</div>
+        <?php } ?>
     </div>
 </main>
 
