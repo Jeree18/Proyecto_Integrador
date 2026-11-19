@@ -106,7 +106,7 @@ if($idCurso <= 0){
                         mysqli_query($conexion, "INSERT INTO inscripcion (ID_Usuario, ID_Curso, Estado, Fecha_Inscripcion)
                                                  VALUES ($idUsuario, $idCurso, '$nuevoEstado', CURDATE())");
                     }
-                    header("location:miscursos.php");
+                    header("location:Mis_cursos.php");
                     exit();
                 }
             }
@@ -126,6 +126,15 @@ if($idCurso <= 0){
                                               FROM etiquetas e
                                               INNER JOIN curso_etiqueta ce ON ce.ID_Etiqueta = e.ID
                                               WHERE ce.ID_Curso = $idCurso");
+    }
+            // Abandonar el curso
+    if(isset($_POST['abandonar']) && $miInscripcion && in_array($miInscripcion['Estado'], ['activa', 'pendiente'])){
+        mysqli_query($conexion, "UPDATE inscripcion SET Estado = 'cancelada'
+                                 WHERE ID_Usuario = $idUsuario AND ID_Curso = $idCurso
+                                 AND Estado IN ('activa','pendiente')");
+        mysqli_close($conexion);
+        header("location:Mis_cursos.php");
+        exit();
     }
 }
 ?>
@@ -165,7 +174,7 @@ if($idCurso <= 0){
             <i class="bi bi-person-circle text-white fs-2"></i>
         <?php } ?>
             <span class="text-white fw-normal mx-2"><?php echo htmlspecialchars($_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido']); ?></span>
-            <a href="miscursos.php" class="btn btn-warning btn-sm me-2">Mis cursos</a>
+            <a href="Mis_cursos.php" class="btn btn-warning btn-sm me-2">Mis cursos</a>
             <a href="cerrar_sesion.php" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
         </div>
       </div>
@@ -176,20 +185,25 @@ if($idCurso <= 0){
 
 <main class="bg-soft flex-grow-1 py-5">
     <?php if($error){ ?>
-    <div class="container mt-4">
-        <div class="alert alert-danger" role="alert">
-            <?php echo htmlspecialchars($mensajeError); ?>
+        <div class="container mt-4">
+            <div class="alert alert-danger" role="alert">
+                <?php echo htmlspecialchars($mensajeError); ?>
+            </div>
+            <a href="index.php" class="btn btn-dark">Volver al inicio</a>
         </div>
-        <a href="index.php" class="btn btn-dark">Volver al inicio</a>
-    </div>
-<?php }else{ ?>
+    <?php }else{ ?>
     <div class="container">
         <div class="row g-4">
 
             <!-- Columna principal -->
-            <div class="col-lg-8">
+            <div class="<?php echo $esEstudiante ? 'col-12' : 'col-lg-8'; ?>">
 
-                <div class="card card-cl curso-card shadow-sm mb-4">
+                    <?php if($esEstudiante){ ?>
+                        <div class="alert alert-success d-flex align-items-center mb-4">
+                        <i class="bi bi-check-circle-fill me-2"></i>Estás inscripto en este curso.
+                    </div>
+                    <?php } ?>
+                    <div class="card card-cl curso-card shadow-sm mb-4">
                     <div class="position-relative">
                         <img src="<?php echo htmlspecialchars(!empty($curso['Imagen']) ? $curso['Imagen'] : 'imagenes/cursos/default.jpg'); ?>" class="card-img-top" alt="" style="height: 300px; object-fit: cover;">
                         <div class="position-absolute top-0 start-0 m-3">
@@ -210,9 +224,17 @@ if($idCurso <= 0){
                                 <span class="badge text-bg-dark"><?php echo htmlspecialchars($etiqueta['Nombre']); ?></span>
                             <?php } ?>
                         <?php } ?>
+                        <?php if($miInscripcion && in_array($miInscripcion['Estado'], ['activa', 'pendiente'])){ ?>
+                        <hr>
+                        <div class="text-end">
+                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalAbandonar">
+                            <i class="bi bi-box-arrow-left me-1"></i>Abandonar curso
+                        </button>
+                    </div>
+                    <?php } ?>
                     </div>
                 </div>
-
+                <?php if($esEstudiante){ ?>
                 <div class="card card-cl curso-card shadow-sm mb-4" id="materiales">
                     <div class="card-body p-4">
                         <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-3"><i class="bi bi-paperclip text-warning me-2"></i>Materiales</h2>
@@ -236,7 +258,8 @@ if($idCurso <= 0){
                         <?php } ?>
                     </div>
                 </div>
-
+                
+                
                 <div class="card card-cl curso-card shadow-sm" id="preguntas">
                     <div class="card-body p-4">
                         <h2 class="h5 border-bottom border-warning border-3 pb-2 mb-3"><i class="bi bi-chat-dots text-warning me-2"></i>Preguntas</h2>
@@ -254,10 +277,12 @@ if($idCurso <= 0){
                         <?php } ?>
                     </div>
                 </div>
+                <?php } ?>
 
             </div><!-- fin col-lg-8 -->
 
             <!-- Columna lateral -->
+             <?php if(!$esEstudiante){ ?>
             <div class="col-lg-4">
                 <div class="card card-cl shadow-sm sticky-lg-top" style="top: 90px;">
                     <div class="card-body p-4">
@@ -298,11 +323,35 @@ if($idCurso <= 0){
                     </div>
                 </div>
             </div>
+            <?php } ?>
 
         </div>
     </div>
 <?php } ?>
 </main>
+<!--Modal para confirmacion de abandono del curso-->
+<?php if($miInscripcion && in_array($miInscripcion['Estado'], ['activa', 'pendiente'])){ ?>
+<div class="modal fade" id="modalAbandonar" tabindex="-1" aria-labelledby="tituloAbandonar" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 border-top border-warning border-4">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="tituloAbandonar"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Abandonar curso</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Seguro que quieres abandonar <strong><?php echo htmlspecialchars($curso['Titulo']); ?></strong>? Vas a perder el acceso a los materiales y a las preguntas del curso.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" class="d-inline">
+                    <button type="submit" name="abandonar" class="btn btn-dark">Sí, abandonar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php } ?>
 <footer id="contacto" class="text-bg-dark py-5 border-top border-warning border-4">
   <div class="container">
     <div class="row g-4">
