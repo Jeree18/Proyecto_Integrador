@@ -145,7 +145,7 @@ $inscripto = mysqli_query($conexion, "SELECT c.ID, c.Titulo, c.Descripcion, c.Co
                             <li><i class="bi bi-cash text-warning me-1"></i><?php echo $curso['Costo'] > 0 ? '$'.number_format($curso['Costo'], 2, ',', '.') : 'Gratuito'; ?></li>
                             <li><i class="bi bi-people text-warning me-1"></i><?php echo $curso['inscriptos']; ?> inscriptos<?php echo $curso['Cupo'] > 0 ? ' de '.$curso['Cupo'] : ' (sin límite de cupo)'; ?></li>
                         </ul>
-                        <a href="curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ver curso</a>
+                        <a href="Detalles_curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ver curso</a>
                     </div>
                 </div>
             </div>
@@ -180,7 +180,7 @@ $inscripto = mysqli_query($conexion, "SELECT c.ID, c.Titulo, c.Descripcion, c.Co
                             <li><i class="bi bi-cash text-warning me-1"></i><?php echo $curso['Costo'] > 0 ? '$'.number_format($curso['Costo'], 2, ',', '.') : 'Gratuito'; ?></li>
                             <li><i class="bi bi-check2-circle text-warning me-1"></i>Inscripto desde el <?php echo date("d/m/Y", strtotime($curso['Fecha_Inscripcion'])); ?></li>
                         </ul>
-                        <a href="curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ir al curso</a>
+                        <a href="Detalles_curso.php?id=<?php echo $curso['ID']; ?>" class="btn btn-dark btn-sm">Ir al curso</a>
                     </div>
                 </div>
             </div>

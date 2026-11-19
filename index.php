@@ -2,6 +2,7 @@
 session_start();
 include "Persistencia/Conexion.php";
 $conexion=conectar();
+$hoy = date("Y-m-d");
 $sql = "SELECT cursos.*, COUNT(inscripcion.ID_Usuario) AS cantidad_inscriptos
         FROM cursos
         JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
@@ -24,7 +25,7 @@ $sql="(SELECT cursos.*, creador.Plan AS plan_creador
       JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
       WHERE creador.Plan = 'gratuito'
       ORDER BY cursos.Fecha_Inicio ASC
-      LIMIT 3)
+      LIMIT 6)
       ORDER BY plan_creador DESC, Fecha_Inicio ASC";
 $cursos = $conexion->query($sql);
 ?>
@@ -172,7 +173,7 @@ $cursos = $conexion->query($sql);
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Publicarlo para que otros se inscriban</li>
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Ver quiénes se inscribieron</li>
               </ul>
-              <a href="crear_curso.php" class="btn btn-warning">Crear un curso</a>
+              <a href="crear_curso.php" class="btn btn-warning">Crear curso</a>
             </div>
           </div>
         </div>
@@ -215,67 +216,101 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <section id="cursos" class="py-5 bg-soft">
+  <section id="cursos" class="py-5 cursos-section">
     <div class="container">
       <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
         <div>
-          <h2 class="fw-bold mb-1">Todos los cursos</h2>
-          <p class="text-secondary mb-0">Elegí uno e inscribite en un par de clics.</p>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-collection-play-fill text-gold me-2"></i>
+              Todos los cursos
+          </h2>
+          <p class="text-secondary mb-0">
+            Elegí uno e inscribite en un par de clics.
+          </p>
         </div>
-        <a href="#" class="btn btn-dark mt-3 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Crear un curso</a>
-      </div>        
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <a href="crear_curso.php" class="btn btn-warning mt-3 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Crear  curso</a>
+      </div>
 
-        <?php while ($c = $cursos->fetch_assoc()): ?>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <?php while ($c = $cursos->fetch_assoc()):
+          if($hoy < $c["Fecha_Inicio"]){
+              $textoEstado = "Próximo";
+              $claseEstado = "text-bg-dark";
+          }elseif($hoy > $c["Fecha_Fin"]){
+              $textoEstado = "Finalizado";
+              $claseEstado = "bg-secondary";
+          }else{
+              $textoEstado = "Activo";
+              $claseEstado = "bg-success";
+          }
+          $imagenCurso = !empty($c["Imagen"]) ? $c["Imagen"] : "imagenes/cursos/default.jpg";
+      ?>
+        <div class="col">
+          <div class="card card-cl curso-card h-100 shadow">
 
-            <div class="col">
-
-                <div class="card h-100 shadow-sm">
-
-                  <img src="<?= htmlspecialchars($c["Imagen"])?>" class="card-img-top" alt="..." style="height: 180px; object-fit: cover;">
-
-                  
-                  <div class="card-body d-flex flex-column">
-                    <h3 class="h5 card-title"><?= htmlspecialchars($c["Titulo"])?></h3>
-                    <p class="card-text text-secondary"><?= htmlspecialchars($c["Descripcion"])?></p>
-                    <ul class="list-unstyled small text-secondary mb-3">
-                      <li><strong>Desde:</strong>&nbsp;<?= htmlspecialchars($c["Fecha_Inicio"])?></li>
-                      <li><strong>Hasta:</strong>&nbsp;<?= htmlspecialchars($c["Fecha_Fin"])?></li>
-                    </ul>
-                      <div class="mt-auto d-flex justify-content-between align-items-center">
-                      <span class="fw-semibold"><?= htmlspecialchars($c["Costo"])?></span>
-                      <a href="#" class="btn btn-outline-dark btn-sm">Inscribirme</a>
-                      </div>
-                  </div>
+            <div class="position-relative">
+              <img src="<?= htmlspecialchars($imagenCurso) ?>" class="card-img-top" alt="" style="height: 180px; object-fit: cover;">
+              <div class="position-absolute top-0 start-0 m-2">
+                <?php if($c["plan_creador"] == "pro"){ ?>
+                  <span class="badge bg-warning text-dark shadow-sm"><i class="bi bi-star-fill me-1"></i>Destacado</span>
+                <?php } ?>
+                <span class="badge <?= $claseEstado ?> shadow-sm"><?= $textoEstado ?></span>
               </div>
+              <span class="position-absolute bottom-0 end-0 m-2 badge text-bg-dark fs-6 shadow-sm">
+                <?= $c["Costo"] > 0 ? '$'.number_format($c["Costo"], 2, ',', '.') : 'Gratuito' ?>
+              </span>
             </div>
-        <?php endwhile; ?>
+
+            <div class="card-body d-flex flex-column">
+              <h3 class="h5 card-title"><?= htmlspecialchars($c["Titulo"]) ?></h3>
+              <p class="card-text text-secondary small"><?= htmlspecialchars(mb_strimwidth($c["Descripcion"] ?? "", 0, 100, "...")) ?></p>
+              <ul class="list-unstyled small text-secondary mb-3">
+                <li><i class="bi bi-calendar-event text-gold me-1"></i><?= date("d/m/Y", strtotime($c["Fecha_Inicio"])) ?> al <?= date("d/m/Y", strtotime($c["Fecha_Fin"])) ?></li>
+                <li><i class="bi bi-people text-gold me-1"></i><?= $c["Cupo"] > 0 ? $c["Cupo"].' lugares' : 'Sin límite de cupo' ?></li>
+              </ul>
+              <a href="curso.php?id=<?= $c["ID"] ?>" class="btn btn-dark mt-auto">Ver curso</a>
+            </div>
+
+          </div>
         </div>
+      <?php endwhile; ?>
       </div>
     </div>
   </section>
 
-  <section id="confianza" class="py-5">
+  <section id="confianza" class="py-5 bg-soft">
     <div class="container">
       <h2 class="fw-bold text-center mb-1">Por qué podés confiar</h2>
       <p class="text-secondary text-center mb-5">Esto es lo que hacemos para cuidar tu cuenta y tu aprendizaje.</p>
       <div class="row g-4 text-center mb-5">
-        <div class="col-md-4">
-          <span class="icon-circle"><i class="bi bi-shield-lock"></i></span>
-          <h3 class="h5 mt-3">Tus datos protegidos</h3>
-          <p class="text-secondary">Tu contraseña se guarda cifrada y no compartimos tus datos con terceros.</p>
-        </div>
-        <div class="col-md-4">
-          <span class="icon-circle"><i class="bi bi-patch-check"></i></span>
-          <h3 class="h5 mt-3">Cursos con información clara</h3>
-          <p class="text-secondary">Cada curso muestra su contenido, duración y nivel antes de inscribirte.</p>
-        </div>
-        <div class="col-md-4">
-          <span class="icon-circle"><i class="bi bi-headset"></i></span>
-          <h3 class="h5 mt-3">Contacto directo</h3>
-          <p class="text-secondary">Si tenés dudas, escribinos y te respondemos por correo.</p>
-        </div>
+  <div class="col-md-4">
+    <div class="card card-cl step-card h-100 shadow-sm">
+      <div class="card-body p-4">
+        <span class="icon-circle"><i class="bi bi-shield-lock"></i></span>
+        <h3 class="h5 mt-3">Tus datos protegidos</h3>
+        <p class="text-secondary mb-0">Tu contraseña se guarda cifrada y no compartimos tus datos con terceros.</p>
       </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card card-cl step-card h-100 shadow-sm">
+      <div class="card-body p-4">
+        <span class="icon-circle"><i class="bi bi-patch-check"></i></span>
+        <h3 class="h5 mt-3">Cursos con información clara</h3>
+        <p class="text-secondary mb-0">Cada curso muestra su contenido, duración y nivel antes de inscribirte.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card card-cl step-card h-100 shadow-sm">
+      <div class="card-body p-4">
+        <span class="icon-circle"><i class="bi bi-headset"></i></span>
+        <h3 class="h5 mt-3">Contacto directo</h3>
+        <p class="text-secondary mb-0">Si tenés dudas, escribinos y te respondemos por correo.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
       <h3 class="h5 text-center mb-4">Lo que dicen quienes ya lo usaron</h3>
       <div class="row row-cols-1 row-cols-md-3 g-4">
