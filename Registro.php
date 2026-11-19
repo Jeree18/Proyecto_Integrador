@@ -66,7 +66,6 @@ if(isset($_POST['Registrar'])){
         $error = true;
     }
 
-    
     if($telefono !== "" && (!ctype_digit($telefono) || strlen($telefono) < 8 || strlen($telefono) > 20)){
         $mjetelefono = "El teléfono debe tener entre 8 y 20 números.";
         $error = true;

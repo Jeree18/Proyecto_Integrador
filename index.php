@@ -268,7 +268,7 @@ $cursos = $conexion->query($sql);
                 <li><i class="bi bi-calendar-event text-gold me-1"></i><?= date("d/m/Y", strtotime($c["Fecha_Inicio"])) ?> al <?= date("d/m/Y", strtotime($c["Fecha_Fin"])) ?></li>
                 <li><i class="bi bi-people text-gold me-1"></i><?= $c["Cupo"] > 0 ? $c["Cupo"].' lugares' : 'Sin límite de cupo' ?></li>
               </ul>
-              <a href="curso.php?id=<?= $c["ID"] ?>" class="btn btn-dark mt-auto">Ver curso</a>
+              <a href="Inscripcion.php?id=<?= $c["ID"] ?>" class="btn btn-dark mt-auto">Ver curso</a>
             </div>
 
           </div>
