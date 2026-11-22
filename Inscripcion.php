@@ -68,7 +68,9 @@ if(isset($_POST['inscribirme'])){
     $pendiente = ($miInscripcion && $miInscripcion['Estado'] == 'pendiente');
 
     if($textoEstado == "Próximo"){
-        $mensaje = "Podés inscribirte a partir de la fecha de inicio del curso.";
+        $mensaje = "Este curso todavía no comenzó. Vas a poder inscribirte mientras esté en curso.";
+    }elseif($textoEstado == "Finalizado"){
+        $mensaje = "Este curso ya finalizó.";
     }elseif($textoEstado == "Finalizado"){
         $mensaje = "Este curso ya finalizó.";
     }elseif($pendiente){
@@ -88,6 +90,7 @@ if(isset($_POST['inscribirme'])){
         }
     }
 
+    
     if($mensaje == ""){
         $nuevoEstado = $curso['Costo'] > 0 ? 'pendiente' : 'activa';
 
@@ -188,7 +191,7 @@ if(isset($_POST['inscribirme'])){
                         <p class="display-6 fw-bold mb-3"><?php echo $curso['Costo'] > 0 ? '$'.number_format($curso['Costo'], 2, ',', '.') : 'Gratuito'; ?></p>
 
                         <ul class="list-unstyled mb-4">
-                            <li class="mb-2"><i class="bi bi-calendar-event text-gold me-2"></i><?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?> al <?php echo date("d/m/Y", strtotime($curso['Fecha_Fin'])); ?></li>
+                            <li class="mb-2"><i class="bi bi-calendar-event text-gold me-2"></i>Duración: <?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?> al <?php echo date("d/m/Y", strtotime($curso['Fecha_Fin'])); ?></li>
                             <li class="mb-2"><i class="bi bi-people text-gold me-2"></i><?php echo $curso['inscriptos']; ?> inscriptos<?php echo $curso['Cupo'] > 0 ? ' de '.$curso['Cupo'] : ' (sin límite de cupo)'; ?></li>
                             <li class="mb-2"><i class="bi bi-person text-gold me-2"></i>Dictado por <?php echo htmlspecialchars($curso['Nombre']." ".$curso['Apellido']); ?></li>
                         </ul>
@@ -204,7 +207,8 @@ if(isset($_POST['inscribirme'])){
                             <button class="btn btn-secondary btn-lg w-100" disabled>Curso finalizado</button>
 
                         <?php }elseif($textoEstado == "Próximo"){ ?>
-                            <button class="btn btn-secondary btn-lg w-100" disabled>Inscripción desde el <?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?></button>
+                            <button class="btn btn-secondary btn-lg w-100" disabled>Disponible cuando comience el curso</button>
+                            <p class="text-secondary small mt-2 mb-0">Empieza el <?php echo date("d/m/Y", strtotime($curso['Fecha_Inicio'])); ?>. Vas a poder inscribirte mientras esté en curso.</p>
 
                         <?php }elseif($curso['Cupo'] > 0 && $curso['inscriptos'] >= $curso['Cupo']){ ?>
                             <button class="btn btn-secondary btn-lg w-100" disabled>Sin lugares disponibles</button>

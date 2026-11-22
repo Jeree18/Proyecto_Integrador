@@ -155,3 +155,12 @@
     .step-card, .curso-card { transition: none; }
     .step-card:hover, .curso-card:hover { transform: none; }
 }
+/* ---------- Desplegable del foro ---------- */
+.accordion {
+    --bs-accordion-active-bg: #FFF6DB;
+    --bs-accordion-active-color: var(--cl-ink);
+    --bs-accordion-btn-focus-border-color: var(--cl-gold);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 .25rem rgba(245, 184, 46, .35);
+    --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230E1B33'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+.accordion-button:not(.collapsed) { box-shadow: none; }
