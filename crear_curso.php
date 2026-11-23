@@ -105,11 +105,43 @@ if(isset($_POST['crear'])){
         mysqli_query($conexion, "INSERT INTO cursos (Titulo, Descripcion, Costo, Cupo, Fecha_Inicio, Fecha_Fin, ID_Creador, Publico)
         VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publicoSeguro')");
 
+       
         $idcurso = mysqli_insert_id($conexion);
+
+        // Separamos las etiquetas por las comas
+        $listaEtiquetas = explode(",", $etiquetas);
+
+        foreach($listaEtiquetas as $etiqueta){
+
+            $etiqueta = trim($etiqueta);
+
+            if($etiqueta != ""){
+
+                $etiquetaSegura = mysqli_real_escape_string($conexion, $etiqueta);
+
+                // Buscamos si la etiqueta ya existe
+                $consulta = mysqli_query($conexion, "SELECT ID FROM etiquetas WHERE Nombre = '$etiquetaSegura'");
+
+                if(mysqli_num_rows($consulta) > 0){
+
+                    $fila = mysqli_fetch_assoc($consulta);
+                    $idEtiqueta = $fila['ID'];
+
+                }else{
+
+                    // Si no existe, la creamos
+                    mysqli_query($conexion, "INSERT INTO etiquetas (Nombre) VALUES ('$etiquetaSegura')");
+
+                    $idEtiqueta = mysqli_insert_id($conexion);
+                }
+
+                // Relacionamos la etiqueta con el curso
+                mysqli_query($conexion, "INSERT INTO curso_etiqueta (ID_Curso, ID_Etiqueta)
+                                        VALUES ($idcurso, $idEtiqueta)");
+            }
+        }
+
         mysqli_close($conexion);
-
-        // aca irian las etiquetas
-
         header("Location: index.php");
         exit();
         }

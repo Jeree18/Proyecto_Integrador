@@ -1,166 +1,178 @@
-/* ==========================================================
-   Cursolandia - paleta fija
-   Azul noche (base) + dorado (acento) + grises fríos (fondos)
-   ========================================================== */
-:root {
-    --cl-ink: #0E1B33;
-    --cl-ink-2: #1B3059;
-    --cl-gold: #F5B82E;
-    --cl-gold-dark: #B7791F;
-    --cl-soft: #F4F6FA;
-    --cl-muted-on-dark: #C5CDDD;
+    /* ==========================================================
+    Cursolandia - paleta fija
+    Azul noche (base) + dorado (acento) + grises fríos (fondos)
+    ========================================================== */
+    :root {
+        --cl-ink: #0E1B33;
+        --cl-ink-2: #1B3059;
+        --cl-gold: #F5B82E;
+        --cl-gold-dark: #B7791F;
+        --cl-soft: #F4F6FA;
+        --cl-muted-on-dark: #C5CDDD;
 
-    --bs-dark-rgb: 14, 27, 51;
-    --bs-warning-rgb: 245, 184, 46;
-    --bs-secondary-rgb: 91, 102, 120;
-    --bs-body-color: #1B2433;
-    --bs-secondary-color: #5B6678;
-    --bs-heading-color: #0E1B33;
+        --bs-dark-rgb: 14, 27, 51;
+        --bs-warning-rgb: 245, 184, 46;
+        --bs-secondary-rgb: 91, 102, 120;
+        --bs-body-color: #1B2433;
+        --bs-secondary-color: #5B6678;
+        --bs-heading-color: #0E1B33;
+    }
+
+    /* ---------- Textos y fondos ---------- */
+    .text-bg-dark,
+    .slide-curso { --bs-heading-color: #fff; }
+
+    .text-bg-dark .text-secondary { color: var(--cl-muted-on-dark) !important; }
+    #como-funciona .text-white-50 { color: var(--cl-muted-on-dark) !important; }
+
+    .bg-soft { background-color: var(--cl-soft); }
+    .text-gold { color: var(--cl-gold-dark); }
+
+    /* ---------- Botones ---------- */
+    .btn-warning {
+        --bs-btn-color: var(--cl-ink);
+        --bs-btn-bg: var(--cl-gold);
+        --bs-btn-border-color: var(--cl-gold);
+        --bs-btn-hover-color: var(--cl-ink);
+        --bs-btn-hover-bg: #FFD04F;
+        --bs-btn-hover-border-color: #FFD04F;
+        --bs-btn-active-color: var(--cl-ink);
+        --bs-btn-active-bg: #E0A21C;
+        --bs-btn-active-border-color: #E0A21C;
+    }
+    .btn-dark {
+        --bs-btn-bg: var(--cl-ink);
+        --bs-btn-border-color: var(--cl-ink);
+        --bs-btn-hover-bg: var(--cl-ink-2);
+        --bs-btn-hover-border-color: var(--cl-ink-2);
+        --bs-btn-active-bg: var(--cl-ink-2);
+        --bs-btn-active-border-color: var(--cl-ink-2);
+    }
+    .btn-outline-dark {
+        --bs-btn-color: var(--cl-ink);
+        --bs-btn-border-color: var(--cl-ink);
+        --bs-btn-hover-bg: var(--cl-ink);
+        --bs-btn-hover-border-color: var(--cl-ink);
+        --bs-btn-active-bg: var(--cl-ink);
+        --bs-btn-active-border-color: var(--cl-ink);
+    }
+
+    /* ---------- Carrusel ---------- */
+    .slide-curso {
+        min-height: 320px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--cl-ink) 0%, var(--cl-ink-2) 100%);
+    }
+    .slide-curso.slide-2 { background: linear-gradient(135deg, var(--cl-ink) 0%, #0F4C5C 100%); }
+    .slide-curso.slide-3 { background: linear-gradient(135deg, var(--cl-ink) 0%, #2E2766 100%); }
+    .slide-icono { font-size: 7rem; color: var(--cl-gold); }
+    .carousel-indicators [data-bs-target] { background-color: var(--cl-gold); }
+
+    .carousel-caption-custom {
+        padding: 2rem 4rem;
+        min-height: clamp(420px, 70vh, 600px);
+        display: flex;
+        align-items: center;
+    }
+    .carousel-caption-custom > .row { width: 100%; }
+
+    .slide-imagen {
+        width: 100%;
+        height: 340px;
+        max-height: 340px;
+        object-fit: cover;
+        border-radius: .375rem;
+        display: block;
+    }
+
+    /* ---------- Íconos ---------- */
+    .icon-circle {
+        width: 4rem;
+        height: 4rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: var(--cl-gold);
+        color: var(--cl-ink);
+        font-size: 1.75rem;
+    }
+    .curso-icono {
+        width: 3rem;
+        height: 3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .5rem;
+        font-size: 1.5rem;
+        background-color: var(--cl-ink);
+        color: var(--cl-gold);
+    }
+
+    /* ---------- Tarjetas ---------- */
+    .card-cl { border: 0; border-top: 4px solid var(--cl-gold); }
+    .card-cl-left { border: 0; border-left: 4px solid var(--cl-gold); }
+
+    /* Se levanta, se agranda y se marca con aro dorado (Cómo funciona, Qué podés hacer, confianza) */
+    .step-card {
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .step-card:hover {
+        transform: translateY(-8px) scale(1.05);
+        box-shadow: 0 0 0 3px var(--cl-gold), 0 1.25rem 2.5rem rgba(14, 27, 51, .35) !important;
+    }
+
+    /* Tarjetas de curso: se levantan y se marcan con aro dorado */
+    .curso-card {
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .curso-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0 0 3px var(--cl-gold), 0 .75rem 1.5rem rgba(14, 27, 51, .25) !important;
+    }
+
+    /* ---------- Selector de imagen (crear_curso.php) ---------- */
+    .opcion-imagen {
+        cursor: pointer;
+        border: 3px solid transparent;
+        border-radius: .5rem;
+        padding: 2px;
+        transition: border-color .2s ease, transform .2s ease;
+    }
+    .opcion-imagen img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+    }
+    .opcion-imagen:hover { transform: translateY(-2px); }
+    .btn-check:checked + .opcion-imagen {
+        border-color: var(--cl-gold);
+        box-shadow: 0 0 0 2px var(--cl-ink);
+    }
+
+    /* ---------- Accesibilidad: sin animaciones si el usuario las reduce ---------- */
+    @media (prefers-reduced-motion: reduce) {
+        .step-card, .curso-card { transition: none; }
+        .step-card:hover, .curso-card:hover { transform: none; }
+    }
+    /* ---------- Desplegable del foro ---------- */
+    .accordion {
+        --bs-accordion-active-bg: #FFF6DB;
+        --bs-accordion-active-color: var(--cl-ink);
+        --bs-accordion-btn-focus-border-color: var(--cl-gold);
+        --bs-accordion-btn-focus-box-shadow: 0 0 0 .25rem rgba(245, 184, 46, .35);
+        --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230E1B33'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+    .accordion-button:not(.collapsed) { box-shadow: none; }
+    .cursos-encabezado {
+    background-color: var(--cl-ink-2);
+    padding: 25px 0;
 }
 
-/* ---------- Textos y fondos ---------- */
-.text-bg-dark,
-.slide-curso { --bs-heading-color: #fff; }
-
-.text-bg-dark .text-secondary { color: var(--cl-muted-on-dark) !important; }
-#como-funciona .text-white-50 { color: var(--cl-muted-on-dark) !important; }
-
-.bg-soft { background-color: var(--cl-soft); }
-.text-gold { color: var(--cl-gold-dark); }
-
-/* ---------- Botones ---------- */
-.btn-warning {
-    --bs-btn-color: var(--cl-ink);
-    --bs-btn-bg: var(--cl-gold);
-    --bs-btn-border-color: var(--cl-gold);
-    --bs-btn-hover-color: var(--cl-ink);
-    --bs-btn-hover-bg: #FFD04F;
-    --bs-btn-hover-border-color: #FFD04F;
-    --bs-btn-active-color: var(--cl-ink);
-    --bs-btn-active-bg: #E0A21C;
-    --bs-btn-active-border-color: #E0A21C;
-}
-.btn-dark {
-    --bs-btn-bg: var(--cl-ink);
-    --bs-btn-border-color: var(--cl-ink);
-    --bs-btn-hover-bg: var(--cl-ink-2);
-    --bs-btn-hover-border-color: var(--cl-ink-2);
-    --bs-btn-active-bg: var(--cl-ink-2);
-    --bs-btn-active-border-color: var(--cl-ink-2);
-}
-.btn-outline-dark {
-    --bs-btn-color: var(--cl-ink);
-    --bs-btn-border-color: var(--cl-ink);
-    --bs-btn-hover-bg: var(--cl-ink);
-    --bs-btn-hover-border-color: var(--cl-ink);
-    --bs-btn-active-bg: var(--cl-ink);
-    --bs-btn-active-border-color: var(--cl-ink);
+.cursos-encabezado h2 {
+    color: white;
 }
 
-/* ---------- Carrusel ---------- */
-.slide-curso {
-    min-height: 320px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--cl-ink) 0%, var(--cl-ink-2) 100%);
+.cursos-encabezado p {
+    color: var(--cl-muted-on-dark) !important;
 }
-.slide-curso.slide-2 { background: linear-gradient(135deg, var(--cl-ink) 0%, #0F4C5C 100%); }
-.slide-curso.slide-3 { background: linear-gradient(135deg, var(--cl-ink) 0%, #2E2766 100%); }
-.slide-icono { font-size: 7rem; color: var(--cl-gold); }
-.carousel-indicators [data-bs-target] { background-color: var(--cl-gold); }
-
-.carousel-caption-custom {
-    padding: 2rem 4rem;
-    min-height: clamp(420px, 70vh, 600px);
-    display: flex;
-    align-items: center;
-}
-.carousel-caption-custom > .row { width: 100%; }
-
-.slide-imagen {
-    width: 100%;
-    height: 340px;
-    max-height: 340px;
-    object-fit: cover;
-    border-radius: .375rem;
-    display: block;
-}
-
-/* ---------- Íconos ---------- */
-.icon-circle {
-    width: 4rem;
-    height: 4rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: var(--cl-gold);
-    color: var(--cl-ink);
-    font-size: 1.75rem;
-}
-.curso-icono {
-    width: 3rem;
-    height: 3rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: .5rem;
-    font-size: 1.5rem;
-    background-color: var(--cl-ink);
-    color: var(--cl-gold);
-}
-
-/* ---------- Tarjetas ---------- */
-.card-cl { border: 0; border-top: 4px solid var(--cl-gold); }
-.card-cl-left { border: 0; border-left: 4px solid var(--cl-gold); }
-
-/* Se levanta, se agranda y se marca con aro dorado (Cómo funciona, Qué podés hacer, confianza) */
-.step-card {
-    transition: transform .25s ease, box-shadow .25s ease;
-}
-.step-card:hover {
-    transform: translateY(-8px) scale(1.05);
-    box-shadow: 0 0 0 3px var(--cl-gold), 0 1.25rem 2.5rem rgba(14, 27, 51, .35) !important;
-}
-
-/* Tarjetas de curso: se levantan y se marcan con aro dorado */
-.curso-card {
-    transition: transform .2s ease, box-shadow .2s ease;
-}
-.curso-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 0 0 3px var(--cl-gold), 0 .75rem 1.5rem rgba(14, 27, 51, .25) !important;
-}
-
-/* ---------- Selector de imagen (crear_curso.php) ---------- */
-.opcion-imagen {
-    cursor: pointer;
-    border: 3px solid transparent;
-    border-radius: .5rem;
-    padding: 2px;
-    transition: border-color .2s ease, transform .2s ease;
-}
-.opcion-imagen img {
-    width: 100%;
-    height: 110px;
-    object-fit: cover;
-}
-.opcion-imagen:hover { transform: translateY(-2px); }
-.btn-check:checked + .opcion-imagen {
-    border-color: var(--cl-gold);
-    box-shadow: 0 0 0 2px var(--cl-ink);
-}
-
-/* ---------- Accesibilidad: sin animaciones si el usuario las reduce ---------- */
-@media (prefers-reduced-motion: reduce) {
-    .step-card, .curso-card { transition: none; }
-    .step-card:hover, .curso-card:hover { transform: none; }
-}
-/* ---------- Desplegable del foro ---------- */
-.accordion {
-    --bs-accordion-active-bg: #FFF6DB;
-    --bs-accordion-active-color: var(--cl-ink);
-    --bs-accordion-btn-focus-border-color: var(--cl-gold);
-    --bs-accordion-btn-focus-box-shadow: 0 0 0 .25rem rgba(245, 184, 46, .35);
-    --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230E1B33'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
-.accordion-button:not(.collapsed) { box-shadow: none; }

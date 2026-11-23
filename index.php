@@ -18,6 +18,8 @@ if(isset($_SESSION['Usuario'])){
 }
 $cantNotificaciones = count($notificaciones);;
 $hoy = date("Y-m-d");
+$busqueda = trim($_GET['buscar'] ?? "");
+$busquedaSegura = mysqli_real_escape_string($conexion, $busqueda);
 $sql = "SELECT cursos.*, COUNT(inscripcion.ID_Usuario) AS cantidad_inscriptos
         FROM cursos
         JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
@@ -32,16 +34,44 @@ $sql="(SELECT cursos.*, creador.Plan AS plan_creador
       FROM cursos
       JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
       WHERE creador.Plan = 'pro'
+      AND (
+          '$busquedaSegura' = ''
+          OR cursos.Titulo LIKE '%$busquedaSegura%'
+          OR cursos.Descripcion LIKE '%$busquedaSegura%'
+          OR EXISTS (
+              SELECT 1
+              FROM curso_etiqueta ce
+              JOIN etiquetas e ON e.ID = ce.ID_Etiqueta
+              WHERE ce.ID_Curso = cursos.ID
+              AND e.Nombre LIKE '%$busquedaSegura%'
+          )
+      )
       ORDER BY cursos.Fecha_Inicio ASC
       LIMIT 3)
+
       UNION ALL
+
       (SELECT cursos.*, creador.Plan AS plan_creador
       FROM cursos
       JOIN usuarios AS creador ON creador.ID = cursos.ID_Creador
       WHERE creador.Plan = 'gratuito'
+      AND (
+          '$busquedaSegura' = ''
+          OR cursos.Titulo LIKE '%$busquedaSegura%'
+          OR cursos.Descripcion LIKE '%$busquedaSegura%'
+          OR EXISTS (
+              SELECT 1
+              FROM curso_etiqueta ce
+              JOIN etiquetas e ON e.ID = ce.ID_Etiqueta
+              WHERE ce.ID_Curso = cursos.ID
+              AND e.Nombre LIKE '%$busquedaSegura%'
+          )
+      )
       ORDER BY cursos.Fecha_Inicio ASC
       LIMIT 6)
+
       ORDER BY plan_creador DESC, Fecha_Inicio ASC";
+
 $cursos = $conexion->query($sql);
 ?>
 <!DOCTYPE html>
@@ -72,8 +102,8 @@ $cursos = $conexion->query($sql);
         <li><a href="#contacto" class="nav-link px-3 text-white">Contacto</a></li>
       </ul>
 
-      <form class="col-12 col-lg-auto mb-3 mb-lg-0 mx-lg-auto" role="search" style="max-width: 300px;">
-        <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Buscar..." aria-label="Buscar">
+      <form action="index.php#cursos" method="GET" class="col-12 col-lg-auto mb-3 mb-lg-0 mx-lg-auto" role="search" style="max-width: 300px;">
+        <input type="search" name="buscar" class="form-control form-control-dark text-bg-dark" placeholder="Buscar..." aria-label="Buscar" value="<?= htmlspecialchars($busqueda) ?>">
       </form>
 
       <div class="text-end">
@@ -284,20 +314,29 @@ $cursos = $conexion->query($sql);
     </div>
   </section>
 
-  <section id="cursos" class="py-5 cursos-section">
-    <div class="container">
-      <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
-        <div>
-          <h2 class="fw-bold mb-1">
-            <i class="bi bi-collection-play-fill text-gold me-2"></i>
-              Todos los cursos
-          </h2>
-          <p class="text-secondary mb-0">
-            Elegí uno e inscribite en un par de clics.
-          </p>
+  <section id="cursos" class="py-5 bg-soft"> 
+    <div class="cursos-encabezado mb-4">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-collection-play-fill text-warning me-2"></i>
+                        Todos los cursos
+                    </h2>
+                    <p class="mb-0">
+                        Elegí uno e inscribite en un par de clics.
+                    </p>
+                </div>
+
+                <a href="crear_curso.php" class="btn btn-warning mt-3 mt-md-0">
+                    <i class="bi bi-plus-circle me-1"></i> Crear curso
+                </a>
+            </div>
         </div>
-        <a href="crear_curso.php" class="btn btn-warning mt-3 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Crear  curso</a>
-      </div>
+    </div>
+
+    <div class="container">
+        
 
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
       <?php while ($c = $cursos->fetch_assoc()):
