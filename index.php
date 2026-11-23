@@ -2,6 +2,21 @@
 session_start();
 include "Persistencia/Conexion.php";
 $conexion=conectar();
+$notificaciones = [];
+$idUsuarioNotif = 0;
+if(isset($_SESSION['Usuario'])){
+    $idUsuarioNotif = (int)$_SESSION['Usuario']['ID'];
+    $resNotif = mysqli_query($conexion, "SELECT n.ID, n.Texto, n.ID_pregunta, n.ID_respuesta, p.ID_curso, c.ID_Creador
+                                         FROM notificaciones n
+                                         LEFT JOIN preguntas p ON p.ID_pregunta = n.ID_pregunta
+                                         LEFT JOIN cursos c ON c.ID = p.ID_curso
+                                         WHERE n.ID_usuario = $idUsuarioNotif
+                                         ORDER BY n.ID DESC");
+    while($fila = mysqli_fetch_assoc($resNotif)){
+        $notificaciones[] = $fila;
+    }
+}
+$cantNotificaciones = count($notificaciones);;
 $hoy = date("Y-m-d");
 $sql = "SELECT cursos.*, COUNT(inscripcion.ID_Usuario) AS cantidad_inscriptos
         FROM cursos
@@ -74,6 +89,59 @@ $cursos = $conexion->query($sql);
                 echo "<i class='bi bi-person-circle text-white fs-2'></i>";
             }
             echo "<span class='text-white fw-normal mx-2'>".htmlspecialchars($_SESSION['Usuario']['Nombre'])." ".htmlspecialchars($_SESSION['Usuario']['Apellido'])."</span>";
+                        ?>
+            <!-- Campana de notificaciones -->
+            <div class="dropdown me-2">
+                <button type="button" class="btn btn-outline-light btn-sm position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notificaciones">
+                    <i class="bi bi-bell-fill"></i>
+                    <?php if($cantNotificaciones > 0){ ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"><?php echo $cantNotificaciones; ?></span>
+                    <?php } ?>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-0 shadow" style="width: 360px; max-width: 90vw;">
+
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <span class="fw-semibold">Notificaciones</span>
+                        <form method="post" action="notificaciones_accion.php">
+                            <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none" name="limpiar_notificaciones">Marcar todas como leídas</button>
+                        </form>
+                    </div>
+
+                    <?php if($cantNotificaciones == 0){ ?>
+                        <p class="text-center text-secondary small my-3">No tenés notificaciones.</p>
+                    <?php }else{ ?>
+                    <div style="max-height: 360px; overflow-y: auto;">
+                        <?php foreach($notificaciones as $notif){
+                            if($notif['ID_respuesta'] !== null){
+                                $icono = "bi-reply";
+                            }elseif($notif['ID_pregunta'] !== null){
+                                $icono = "bi-chat-dots";
+                            }else{
+                                $icono = "bi-person-plus";
+                            }
+
+                            if($notif['ID_pregunta'] !== null && $notif['ID_curso'] !== null){
+                                $pagina = ($notif['ID_Creador'] == $idUsuarioNotif) ? "gestionar_curso.php" : "Detalles_curso.php";
+                                $enlace = $pagina."?id=".$notif['ID_curso']."#pregunta-".$notif['ID_pregunta'];
+                            }else{
+                                $enlace = "Mis_cursos.php";
+                            }
+                        ?>
+                            <div class="d-flex align-items-start gap-2 px-3 py-2 border-bottom">
+                                <i class="bi <?php echo $icono; ?> text-warning fs-5"></i>
+                                <a href="<?php echo $enlace; ?>" class="flex-grow-1 small text-decoration-none text-dark"><?php echo htmlspecialchars($notif['Texto']); ?></a>
+                                <form method="post" action="notificaciones_accion.php">
+                                    <input type="hidden" name="id_notificacion" value="<?php echo $notif['ID']; ?>">
+                                    <button type="submit" class="btn-close btn-sm" name="descartar_notificacion" aria-label="Descartar"></button>
+                                </form>
+                            </div>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+
+                </div>
+            </div>
+            <?php
             echo "<a href='Mis_cursos.php' class='btn btn-warning btn-sm me-2'>Mis cursos</a>";
             echo "<a href='cerrar_sesion.php' class='btn btn-outline-light btn-sm'>Cerrar sesión</a>";
             echo "</div>";

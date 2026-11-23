@@ -9,7 +9,7 @@ if(!isset($_SESSION['Usuario'])){
 }
 
 $conexion = conectar();
-
+mysqli_set_charset($conexion, 'utf8mb4');
 $idUsuario = (int)$_SESSION['Usuario']['ID'];
 $idCurso = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $hoy = date("Y-m-d");
@@ -106,6 +106,16 @@ if($idCurso <= 0){
                         mysqli_query($conexion, "INSERT INTO inscripcion (ID_Usuario, ID_Curso, Estado, Fecha_Inscripcion)
                                                  VALUES ($idUsuario, $idCurso, '$nuevoEstado', CURDATE())");
                     }
+                                        $idCreador = (int)$curso['ID_Creador'];
+                    $nombreAlumno = $_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido'];
+                    if($nuevoEstado == 'pendiente'){
+                        $textoNotif = $nombreAlumno." solicitó inscribirse a «".$curso['Titulo']."».";
+                    }else{
+                        $textoNotif = $nombreAlumno." se inscribió a «".$curso['Titulo']."».";
+                    }
+                    $textoNotifSql = mysqli_real_escape_string($conexion, $textoNotif);
+                    mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario)
+                                             VALUES ('$textoNotifSql', $idCreador)");
                     header("location:Mis_cursos.php");
                     exit();
                 }
@@ -192,6 +202,12 @@ if($idCurso <= 0){
                     $textoSql = mysqli_real_escape_string($conexion, $texto);
                     mysqli_query($conexion, "INSERT INTO preguntas (ID_curso, ID_usuario, Titulo, Texto)
                                              VALUES ($idCurso, $idUsuario, '$tituloSql', '$textoSql')");
+                    $idNuevaPregunta = mysqli_insert_id($conexion);
+                    $idCreador = (int)$curso['ID_Creador'];
+                    $textoNotif = $_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido']." hizo una pregunta en «".$curso['Titulo']."».";
+                    $textoNotifSql = mysqli_real_escape_string($conexion, $textoNotif);
+                    mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario, ID_pregunta)
+                                             VALUES ('$textoNotifSql', $idCreador, $idNuevaPregunta)");                         
                     mysqli_close($conexion);
                     header("location:Detalles_curso.php?id=$idCurso#preguntas");
                     exit();
@@ -221,6 +237,14 @@ if($idCurso <= 0){
                         $textoSql = mysqli_real_escape_string($conexion, $texto);
                         mysqli_query($conexion, "INSERT INTO respuestas (ID_pregunta, ID_usuario, Texto)
                                                  VALUES ($idPregunta, $idUsuario, '$textoSql')");
+                                                $idNuevaRespuesta = mysqli_insert_id($conexion);
+                        $idAutorPregunta = (int)$preguntas[$idPregunta]['ID_usuario'];
+                        if($idAutorPregunta != $idUsuario){
+                            $textoNotif = $_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido']." respondió tu pregunta «".$preguntas[$idPregunta]['Titulo']."».";
+                            $textoNotifSql = mysqli_real_escape_string($conexion, $textoNotif);
+                            mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario, ID_pregunta, ID_respuesta)
+                                                     VALUES ('$textoNotifSql', $idAutorPregunta, $idPregunta, $idNuevaRespuesta)");
+                        }
                         mysqli_query($conexion, "UPDATE preguntas SET Estado = 'respondida'
                                                  WHERE ID_pregunta = $idPregunta AND Estado = 'abierta'");
                         mysqli_close($conexion);

@@ -8,6 +8,7 @@ if(!isset($_SESSION['Usuario'])){
 }
 
 $conexion = conectar();
+mysqli_set_charset($conexion, 'utf8mb4');
 $idUsuario = (int)$_SESSION['Usuario']['ID'];
 $idCurso = (int)($_GET['id'] ?? 0);
 $hoy = date("Y-m-d");
@@ -71,8 +72,6 @@ if(isset($_POST['inscribirme'])){
         $mensaje = "Este curso todavía no comenzó. Vas a poder inscribirte mientras esté en curso.";
     }elseif($textoEstado == "Finalizado"){
         $mensaje = "Este curso ya finalizó.";
-    }elseif($textoEstado == "Finalizado"){
-        $mensaje = "Este curso ya finalizó.";
     }elseif($pendiente){
         $mensaje = "Ya enviaste tu inscripción: está pendiente de confirmación.";
     }elseif($curso['Cupo'] > 0 && $curso['inscriptos'] >= $curso['Cupo']){
@@ -101,7 +100,25 @@ if(isset($_POST['inscribirme'])){
             mysqli_query($conexion, "INSERT INTO inscripcion (ID_Usuario, ID_Curso, Estado, Fecha_Inscripcion)
                                      VALUES ($idUsuario, $idCurso, '$nuevoEstado', CURDATE())");
         }
-
+                            // Avisar al creador del curso
+                    $idUsuarioN = (int)$_SESSION['Usuario']['ID'];
+                    $idCursoN = (int)($_GET['id'] ?? 0);
+                    $resDatos = mysqli_query($conexion, "SELECT c.Titulo, c.ID_Creador, i.Estado
+                                                         FROM cursos c
+                                                         INNER JOIN inscripcion i ON i.ID_Curso = c.ID AND i.ID_Usuario = $idUsuarioN
+                                                         WHERE c.ID = $idCursoN");
+                    $datos = mysqli_fetch_assoc($resDatos);
+                    if($datos){
+                        $nombreAlumno = $_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido'];
+                        if($datos['Estado'] == 'pendiente'){
+                            $textoNotif = $nombreAlumno." solicitó inscribirse a «".$datos['Titulo']."».";
+                        }else{
+                            $textoNotif = $nombreAlumno." se inscribió a «".$datos['Titulo']."».";
+                        }
+                        $textoNotifSql = mysqli_real_escape_string($conexion, $textoNotif);
+                        mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario)
+                                                 VALUES ('$textoNotifSql', ".(int)$datos['ID_Creador'].")");
+                    }
         mysqli_close($conexion);
         header("location:" . ($nuevoEstado == 'activa' ? "Detalles_curso.php?id=$idCurso" : "Inscripcion.php?id=$idCurso"));
         exit();

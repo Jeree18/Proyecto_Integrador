@@ -83,6 +83,11 @@ if($idCurso <= 0){
                 $idEstudiante = (int)($_POST['id_usuario'] ?? 0);
                 mysqli_query($conexion, "UPDATE inscripcion SET Estado = 'activa'
                                          WHERE ID_Usuario = $idEstudiante AND ID_Curso = $idCurso AND Estado = 'pendiente'");
+                if(mysqli_affected_rows($conexion) > 0){
+                    $textoNotifSql = mysqli_real_escape_string($conexion, "Tu inscripción a «".$curso['Titulo']."» fue aceptada.");
+                    mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario)
+                                             VALUES ('$textoNotifSql', $idEstudiante)");
+                }
                 mysqli_close($conexion);
                 header("location:gestionar_curso.php?id=$idCurso#inscripciones");
                 exit();
@@ -93,6 +98,11 @@ if($idCurso <= 0){
                 $idEstudiante = (int)($_POST['id_usuario'] ?? 0);
                 mysqli_query($conexion, "UPDATE inscripcion SET Estado = 'cancelada'
                                          WHERE ID_Usuario = $idEstudiante AND ID_Curso = $idCurso AND Estado = 'pendiente'");
+                if(mysqli_affected_rows($conexion) > 0){
+                    $textoNotifSql = mysqli_real_escape_string($conexion, "Tu inscripción a «".$curso['Titulo']."» fue rechazada.");
+                    mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario)
+                                             VALUES ('$textoNotifSql', $idEstudiante)");
+                }
                 mysqli_close($conexion);
                 header("location:gestionar_curso.php?id=$idCurso#inscripciones");
                 exit();
@@ -243,6 +253,14 @@ if($idCurso <= 0){
                         $textoSql = mysqli_real_escape_string($conexion, $texto);
                         mysqli_query($conexion, "INSERT INTO respuestas (ID_pregunta, ID_usuario, Texto)
                                                  VALUES ($idPregunta, $idUsuario, '$textoSql')");
+                                            $idNuevaRespuesta = mysqli_insert_id($conexion);
+                    $idAutorPregunta = (int)$preguntas[$idPregunta]['ID_usuario'];
+                    if($idAutorPregunta != $idUsuario){
+                        $textoNotif = $_SESSION['Usuario']['Nombre']." ".$_SESSION['Usuario']['Apellido']." (docente) respondió tu pregunta «".$preguntas[$idPregunta]['Titulo']."» en «".$curso['Titulo']."».";
+                        $textoNotifSql = mysqli_real_escape_string($conexion, $textoNotif);
+                        mysqli_query($conexion, "INSERT INTO notificaciones (Texto, ID_usuario, ID_pregunta, ID_respuesta)
+                                                 VALUES ('$textoNotifSql', $idAutorPregunta, $idPregunta, $idNuevaRespuesta)");
+                    }                         
                         mysqli_query($conexion, "UPDATE preguntas SET Estado = 'respondida'
                                                  WHERE ID_pregunta = $idPregunta AND Estado = 'abierta'");
                         mysqli_close($conexion);
@@ -328,10 +346,8 @@ if($idCurso <= 0){
     <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
 
       <a href="index.php" class="d-flex align-items-center mb-2 mb-lg-0 me-lg-4 text-white text-decoration-none">
-        <a href="index.php" class="d-flex align-items-center mb-2 mb-lg-0 me-lg-4 text-white text-decoration-none">
         <i class="bi bi-rocket-takeoff-fill text-warning fs-3 me-2"></i>
         <span class="fs-5 fw-semibold">Cursolandia</span>
-        </a>
       </a>
 
       <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
@@ -404,7 +420,6 @@ if($idCurso <= 0){
                     </div>
                 </div>
                 <!-- Inscripciones -->
-                                <!-- Inscripciones -->
                 <div class="card card-cl curso-card shadow-sm mb-4" id="inscripciones">
                     <div class="card-body p-4">
 
