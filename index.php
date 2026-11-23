@@ -100,6 +100,9 @@ $cursos = $conexion->query($sql);
         <li><a href="#cursos" class="nav-link px-3 text-white">Cursos</a></li>
         <li><a href="#como-funciona" class="nav-link px-3 text-white">Cómo funciona</a></li>
         <li><a href="#contacto" class="nav-link px-3 text-white">Contacto</a></li>
+        <a href="plan_pro.php" class="btn btn-warning rounded-pill px-3">
+          <i class="bi bi-star-fill me-1"></i> Plan Pro
+        </a>
       </ul>
 
       <form action="index.php#cursos" method="GET" class="col-12 col-lg-auto mb-3 mb-lg-0 mx-lg-auto" role="search" style="max-width: 300px;">
@@ -132,7 +135,7 @@ $cursos = $conexion->query($sql);
 
                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                         <span class="fw-semibold">Notificaciones</span>
-                        <form method="post" action="notificaciones_accion.php">
+                        <form method="post" action="Notificaciones.php">
                             <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none" name="limpiar_notificaciones">Marcar todas como leídas</button>
                         </form>
                     </div>
@@ -160,7 +163,7 @@ $cursos = $conexion->query($sql);
                             <div class="d-flex align-items-start gap-2 px-3 py-2 border-bottom">
                                 <i class="bi <?php echo $icono; ?> text-warning fs-5"></i>
                                 <a href="<?php echo $enlace; ?>" class="flex-grow-1 small text-decoration-none text-dark"><?php echo htmlspecialchars($notif['Texto']); ?></a>
-                                <form method="post" action="notificaciones_accion.php">
+                                <form method="post" action="Notificaciones.php">
                                     <input type="hidden" name="id_notificacion" value="<?php echo $notif['ID']; ?>">
                                     <button type="submit" class="btn-close btn-sm" name="descartar_notificacion" aria-label="Descartar"></button>
                                 </form>
@@ -204,11 +207,11 @@ $cursos = $conexion->query($sql);
                 <p class="lead">Cursolandia es una plataforma de cursos online: inscribite en los que ya existen o creá los tuyos para que otros se inscriban.</p>
                 <div class="d-flex flex-wrap gap-2">
                   <a href="#cursos" class="btn btn-warning btn-lg">Ver cursos</a>
-                  <a href="#" class="btn btn-outline-light btn-lg">Crear mi cuenta</a>
+                  <a href="Registro.php" class="btn btn-outline-light btn-lg">Crear mi cuenta</a>
                 </div>
               </div>
               <div class="col-md-4 d-none d-md-block text-center">
-                <img src="Imagenes/imagen1.jpg" alt="Personas aprendiendo en Cursolandia" class="slide-imagen rounded shadow">
+                <img src="Imagenes/Predeterminado.jpg" alt="Personas aprendiendo en Cursolandia" class="slide-imagen rounded shadow">
               </div>
             </div>
           </div>
@@ -222,7 +225,7 @@ $cursos = $conexion->query($sql);
                 <h2 class="display-6 fw-bold"><?= htmlspecialchars($c["Titulo"])?></h2>
                 <p class="lead"><?= htmlspecialchars($c["Descripcion"]??"")?></p>
                 <p class="mb-3">Del <?= htmlspecialchars($c["Fecha_Inicio"])?>  &nbsp;  Al &nbsp;   <?= htmlspecialchars($c["Fecha_Fin"])?></p>
-                <a href="#" class="btn btn-warning btn-lg">Inscribirme</a>
+                <a href="cursos.php" class="btn btn-warning btn-lg">Inscribirme</a>
               </div>
               <div class="col-md-4 d-none d-md-block text-center">
                 <img src="<?= htmlspecialchars($c["Imagen"]) ?>" alt="Imagen" class="slide-imagen rounded shadow">
@@ -258,7 +261,7 @@ $cursos = $conexion->query($sql);
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Inscribirte en uno o varios cursos</li>
                 <li class="mb-2"><i class="bi bi-check-lg text-gold me-2"></i>Ver tus cursos desde tu cuenta</li>
               </ul>
-              <a href="#cursos" class="btn btn-outline-dark">Ver cursos</a>
+              <a href="cursos.php" class="btn btn-outline-dark">Ver cursos</a>
             </div>
           </div>
         </div>
@@ -317,21 +320,27 @@ $cursos = $conexion->query($sql);
   <section id="cursos" class="py-5 bg-soft"> 
     <div class="cursos-encabezado mb-4">
         <div class="container">
-            <div class="d-flex flex-wrap justify-content-between align-items-end">
-                <div>
-                    <h2 class="fw-bold mb-1">
-                        <i class="bi bi-collection-play-fill text-warning me-2"></i>
-                        Todos los cursos
-                    </h2>
-                    <p class="mb-0">
-                        Elegí uno e inscribite en un par de clics.
-                    </p>
-                </div>
+            <div class="d-flex flex-nowrap align-items-center gap-2">
+              <div>
+                <h2 class="fw-bold mb-1">
+                <i class="bi bi-collection-play-fill text-warning me-2"></i>
+                Todos los cursos
+                </h2>
+                <p class="mb-0">
+                Elegí uno e inscribite en un par de clics.
+                </p>
+              </div>
 
-                <a href="crear_curso.php" class="btn btn-warning mt-3 mt-md-0">
-                    <i class="bi bi-plus-circle me-1"></i> Crear curso
-                </a>
-            </div>
+            <div class="d-flex flex-nowrap align-items-center gap-2 ms-auto">
+              <a href="cursos.php" class="btn btn-outline-dark text-nowrap">
+                 Ver todo <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+
+            <a href="crear_curso.php" class="btn btn-warning text-nowrap">
+              <i class="bi bi-plus-circle me-1"></i> Crear curso
+            </a>
+    </div>
+</div>
         </div>
     </div>
 

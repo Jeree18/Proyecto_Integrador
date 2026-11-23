@@ -31,10 +31,17 @@ if(isset($_POST['Ingresar'])){
         mysqli_close($conexion);
 
         if($fila && password_verify($clave, $fila['Contraseña'])){
-            unset($fila['Contraseña']);
-            $_SESSION["Usuario"] = $fila;
-            header("Location: index.php");
+        unset($fila['Contraseña']);
+        $_SESSION["Usuario"] = $fila;
+
+        if($_SESSION['Usuario']['Rol'] == 'administrador'){
+            header("Location: admin.php");
             exit();
+            }else{
+                header("Location: index.php");
+                exit();
+            }
+
         }else{
             $errorlogin = "Correo o contraseña incorrectos.";
         }
