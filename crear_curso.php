@@ -12,6 +12,7 @@ exit();
 }
 $error = false;
 $errtitulo = $errdesc = $errinicio = $errfin = $errcosto = $errcupo = $errpublico = $errlimite = "";
+$imagen = "Predeterminado.jpg";
 $error = false;
 $titulo = $descripcion = $fecha_inicio = $fecha_fin = $costo = $cupo = $etiquetas ="";
 $publico = "si";
@@ -25,7 +26,19 @@ if(isset($_POST['crear'])){
     $cupo         = trim($_POST['cupo'] ?? "");
     $etiquetas    = trim($_POST['etiquetas'] ?? "");
     $publico      = $_POST['publico'] ?? "";
+    $imagen = $_POST['imagen'] ?? "Predeterminado.jpg";
+    $imagenesPermitidas = [
+        "Curso1.jpg",
+        "Curso2.jpg",
+        "Curso3.jpg",
+        "Curso4.jpg",
+        "Curso5.jpg",
+        "Predeterminado.jpg"
+    ];
 
+ if(!in_array($imagen, $imagenesPermitidas)){
+    $imagen = "Predeterminado.jpg";
+ }
  if($titulo == ""){
         $errtitulo = "Ingresá el título del curso.";
         $error = true;
@@ -101,10 +114,9 @@ if(isset($_POST['crear'])){
         $finSeguro = mysqli_real_escape_string($conexion, $fecha_fin);
         $costoSeguro = (float)$costo;
         $cupoSeguro = (int)$cupo;
-
-        mysqli_query($conexion, "INSERT INTO cursos (Titulo, Descripcion, Costo, Cupo, Fecha_Inicio, Fecha_Fin, ID_Creador, Publico)
-        VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publicoSeguro')");
-
+        $imagenSegura = mysqli_real_escape_string($conexion, "Imagenes/" . $imagen);
+        mysqli_query($conexion, "INSERT INTO cursos (Titulo, Descripcion, Costo, Cupo, Fecha_Inicio, Fecha_Fin, ID_Creador, Publico, Imagen)
+        VALUES ('$tituloSeguro', '$descSegura', $costoSeguro, $cupoSeguro, '$inicioSeguro', '$finSeguro', $idcreador, '$publicoSeguro', '$imagenSegura')");
        
         $idcurso = mysqli_insert_id($conexion);
 
@@ -271,7 +283,40 @@ if(isset($_POST['crear'])){
                                         <label class="form-check-label" for="acceso_privado">Privado</label>
                                     </div>
                                 </div>
+                                <div class="col-12">
+                                <label class="form-label">Imagen del curso</label>
 
+                                    <div class="row g-3">
+                                        <?php
+                                        $imagenes = [
+                                            "Predeterminado.jpg",
+                                            "Curso1.jpg",
+                                            "Curso2.jpg",
+                                            "Curso3.jpg",
+                                            "Curso4.jpg",
+                                            "Curso5.jpg"
+                                        ];
+
+                                        foreach($imagenes as $img){
+                                        ?>
+                                            <div class="col-6 col-md-4">
+                                                <label class="imagen-curso">
+                                                    <input type="radio" name="imagen"
+                                                        value="<?php echo $img; ?>"
+                                                        <?php if($imagen == $img) echo "checked"; ?>>
+
+                                                    <img src="Imagenes/<?php echo $img; ?>"
+                                                        class="img-fluid rounded"
+                                                        alt="Imagen del curso"> 
+
+                                                    <?php if($img == "Predeterminado.jpg"){ ?>
+                                                        <span class="badge bg-warning text-dark mt-2">Predeterminada</span>
+                                                    <?php } ?>
+                                                </label>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </div>    
                                 <div class="col-12">
                                     <label for="etiquetas" class="form-label">Etiquetas <span class="text-secondary">(opcional)</span></label>
                                     <input type="text" class="form-control" id="etiquetas" name="etiquetas" placeholder="Separadas por comas">
