@@ -313,13 +313,35 @@ if($_SESSION['Usuario']['Plan'] == 'pro'){
 
 
     <!-- FOOTER -->
-    <footer class="py-4 text-center text-white" style="background-color: #0E1B33;">
-        <div class="container">
-            <p class="mb-0">
-                &copy; 2026 Cursolandia. Todos los derechos reservados.
-            </p>
-        </div>
-    </footer>
+    <footer id="contacto" class="text-bg-dark py-5 border-top border-warning border-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <a href="index.php" class="text-white text-decoration-none d-inline-flex align-items-center mb-2">
+          <i class="bi bi-rocket-takeoff-fill fs-3 me-2"></i><span class="fs-5 fw-semibold">Cursolandia</span>
+        </a>
+        <p class="text-secondary">Una plataforma para crear cursos e inscribirte en ellos.</p>
+      </div>
+      <div class="col-6 col-md-3">
+        <h3 class="h6">Navegación</h3>
+        <ul class="nav flex-column">
+          <li class="nav-item"><a href="index.php" class="nav-link p-0 mb-2 text-secondary">Inicio</a></li>
+          <li class="nav-item"><a href="index.php#como-funciona" class="nav-link p-0 mb-2 text-secondary">Cómo funciona</a></li>
+          <li class="nav-item"><a href="index.php#cursos" class="nav-link p-0 mb-2 text-secondary">Cursos</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4">
+        <h3 class="h6">Contacto</h3>
+        <ul class="list-unstyled text-secondary">
+          <li class="mb-2"><i class="bi bi-envelope me-2"></i>Jeremias01@gmail.com</li>
+          <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>San Luis, Argentina</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary my-4">
+    <p class="text-secondary small mb-0">&copy; 2026 Cursolandia. Todos los derechos reservados.</p>
+  </div>
+</footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
